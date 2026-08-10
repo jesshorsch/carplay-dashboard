@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CarDash">
+  <meta name="theme-color" content="#0a1428">
+  <link rel="manifest" href="manifest.json">
+  <title>CarDash</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    *, *::before, *::after {
+      margin: 0; padding: 0; box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none; -webkit-user-select: none;
+    }
+    :root {
+      --gap: 10px;
+      --radius: 20px;
+      --sb-w: 124px;
+      --rp-w: 320px;
+      --accent: #0a84ff;
+      --text: #ffffff;
+      --text2: rgba(255,255,255,.6);
+      --text3: rgba(255,255,255,.3);
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body {
+      height: 100%; width: 100%;
+      overflow: hidden;
+      /* Background wallpaper visible in gaps */
+      background: radial-gradient(ellipse at 20% 50%, #1a3a6e 0%, #0a1a3a 40%, #050e1f 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: var(--text);
+    }
+
+    /* ═══════════════════════════════════
+       LANDSCAPE — 3-column CarPlay grid
+    ═══════════════════════════════════ */
+    #app {
+      height: 100dvh;
+      padding: var(--gap);
+      padding-top: max(var(--gap), var(--safe-t));
+      padding-bottom: max(var(--gap), var(--safe-b));
+      display: grid;
+      grid-template-columns: var(--sb-w) 1fr var(--rp-w);
+      grid-template-rows: 1fr;
+      gap: var(--gap);
+    }
+
+    /* ═══════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════ */
+    #sidebar {
+      background: rgba(20,26,48,.88);
+      border-radius: var(--radius);
+      backdrop-filter: blur(30px) saturate(160%);
+      -webkit-backdrop-filter: blur(30px) saturate(160%);
+      border: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 18px 0 18px;
+      gap: 0;
+    }
+
+    .sb-time {
+      font-size: 26px; font-weight: 600;
+      letter-spacing: -1px; line-height: 1;
+      margin-bottom: 5px;
+    }
+
+    .sb-battery {
+      font-size: 18px; opacity: .75;
+      margin-bottom: 22px;
+    }
+
+    .sb-apps {
+      flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px;
+    }
+
+    .app-icon {
+      width: 64px; height: 64px; border-radius: 18px;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .12s, box-shadow .2s;
+      position: relative;
+      box-shadow: 0 4px 14px rgba(0,0,0,.35);
+    }
+    .app-icon:active { transform: scale(.90); }
+
+    /* Active indicator — blue bar on left side */
+    .app-icon.active::before {
+      content: '';
+      position: absolute; left: -18px; top: 50%;
+      transform: translateY(-50%);
+      width: 4px; height: 38px;
+      background: var(--accent);
+      border-radius: 0 3px 3px 0;
+    }
+
+    .icon-maps  { background: linear-gradient(145deg, #48b9f7, #1e88e5); }
+    .icon-music { background: linear-gradient(145deg, #f8647c, #c1274a); }
+    .icon-phone { background: linear-gradient(145deg, #4cd964, #1d9e38); }
+
+    .app-icon svg { width: 32px; height: 32px; fill: white; }
+
+    .sb-grid {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.1);
+      border: none; cursor: pointer;
+      display: grid;
+      grid-template-columns: repeat(3, 9px);
+      grid-template-rows: repeat(3, 9px);
+      gap: 3px; padding: 10px;
+      align-items: center; justify-items: center;
+      transition: transform .1s;
+    }
+    .sb-grid:active { transform: scale(.9); }
+    .sb-grid span {
+      width: 9px; height: 9px;
+      background: rgba(255,255,255,.65);
+      border-radius: 2.5px;
+      display: block;
+    }
+
+    /* ═══════════════════════════════════
+       MAP CENTER
+    ═══════════════════════════════════ */
+    #map-area {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+
+    #leaflet-map { position: absolute; inset: 0; }
+
+    .leaflet-control-zoom,
+    .leaflet-control-attribution { display: none !important; }
+
+    /* Map overlay buttons */
+    .mb {
+      position: absolute; z-index: 1000;
+      width: 50px; height: 50px; border-radius: 50%;
+      background: rgba(55,55,70,.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.14);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 20px;
+      transition: transform .1s;
+      box-shadow: 0 3px 10px rgba(0,0,0,.35);
+    }
+    .mb:active { transform: scale(.90); }
+    .mb svg { fill: rgba(255,255,255,.88); }
+
+    .mb-search  { top: 14px; left: 14px; font-size: 18px; }
+    .mb-compass { top: 14px; right: 14px; flex-direction: column; gap: 1px; }
+    .mb-type    { bottom: 66px; right: 14px; }
+    .mb-expand  { bottom: 10px; right: 14px; }
+
+    /* Speed badge */
+    .map-speed {
+      position: absolute; bottom: 10px; left: 14px;
+      z-index: 1000;
+      background: rgba(14,18,36,.90);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 14px; padding: 8px 14px;
+      border: 1px solid rgba(255,255,255,.1);
+      text-align: center;
+    }
+    .map-speed-val { font-size: 26px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+    .map-speed-unit { font-size: 11px; color: var(--text2); font-weight: 400; }
+
+    /* ═══════════════════════════════════
+       RIGHT PANEL
+    ═══════════════════════════════════ */
+    #right-panel {
+      display: flex; flex-direction: column;
+      gap: var(--gap);
+    }
+
+    /* — NOW PLAYING card — */
+    .np-card {
+      flex: 3;
+      border-radius: var(--radius);
+      /* Frosted glass with blue tint — matches Apple's music widget */
+      background: rgba(72,100,170,.38);
+      backdrop-filter: blur(40px) saturate(200%);
+      -webkit-backdrop-filter: blur(40px) saturate(200%);
+      border: 1px solid rgba(255,255,255,.16);
+      padding: 18px 16px 14px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0;
+      cursor: pointer;
+      overflow: hidden;
+      transition: opacity .15s;
+      box-shadow: 0 8px 32px rgba(0,0,0,.3);
+    }
+    .np-card:active { opacity: .85; }
+
+    /* Inner shine */
+    .np-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+    }
+
+    .np-art {
+      width: 80px; height: 80px; border-radius: 14px;
+      background: rgba(140,150,180,.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+      flex-shrink: 0;
+      margin-bottom: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,.3);
+    }
+    .np-art img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
+    .np-art.playing { animation: art-pulse 3s ease infinite; }
+    @keyframes art-pulse {
+      0%,100% { box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+      50%      { box-shadow: 0 6px 24px rgba(10,132,255,.3), 0 4px 16px rgba(0,0,0,.2); }
+    }
+
+    .np-title  { font-size: 18px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 2px; text-align: center; }
+    .np-artist { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 8px; }
+
+    /* Progress in card */
+    .np-prog-bar {
+      width: 100%; height: 3px;
+      background: rgba(255,255,255,.18);
+      border-radius: 2px; cursor: pointer;
+      margin-bottom: 8px; overflow: hidden;
+    }
+    .np-prog-fill {
+      height: 100%; width: 0%;
+      background: rgba(255,255,255,.8);
+      border-radius: 2px;
+      transition: width .4s linear;
+    }
+
+    /* Controls in card */
+    .np-controls {
+      display: flex; align-items: center; justify-content: center;
+      gap: 24px; width: 100%;
+    }
+    .np-btn {
+      background: none; border: none; color: var(--text);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform .1s, opacity .15s;
+    }
+    .np-btn:active { transform: scale(.85); opacity: .7; }
+    .np-btn svg { fill: currentColor; }
+    .np-btn.sm svg { width: 24px; height: 24px; }
+
+    .np-play {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(255,255,255,.18);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .12s, background .15s;
+    }
+    .np-play:active { transform: scale(.90); background: rgba(255,255,255,.28); }
+    .np-play svg { width: 24px; height: 24px; fill: white; }
+
+    /* — DATE / WEATHER card — */
+    .dw-card {
+      flex: 2;
+      border-radius: var(--radius);
+      background: rgba(8,12,26,.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.07);
+      padding: 18px 20px;
+      display: flex; flex-direction: column; justify-content: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+
+    .dw-date { font-size: 19px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 10px; }
+
+    .dw-temp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .dw-icon { font-size: 26px; }
+    .dw-temp { font-size: 34px; font-weight: 700; letter-spacing: -1.5px; }
+
+    .dw-cond  { font-size: 14px; color: var(--text2); margin-bottom: 8px; }
+    .dw-loc   { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+    .dw-src   { font-size: 10px; color: var(--text3); }
+
+    /* ═══════════════════════════════════
+       MUSIC OVERLAY  (slides up)
+    ═══════════════════════════════════ */
+    #overlay {
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0; pointer-events: none;
+      transition: opacity .28s ease;
+      display: flex; align-items: flex-end;
+    }
+    #overlay.show { opacity: 1; pointer-events: all; }
+
+    .overlay-sheet {
+      width: 100%; max-width: 600px; margin: 0 auto;
+      background: linear-gradient(175deg, #1d2540 0%, #111828 100%);
+      border-radius: 24px 24px 0 0;
+      padding: 0 22px 22px;
+      padding-bottom: max(22px, var(--safe-b));
+      transform: translateY(100%);
+      transition: transform .32s cubic-bezier(.4,0,.2,1);
+      border: 1px solid rgba(255,255,255,.1);
+      border-bottom: none;
+    }
+    #overlay.show .overlay-sheet { transform: translateY(0); }
+
+    .os-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,.2); border-radius: 2px;
+      margin: 12px auto 18px;
+    }
+
+    .os-art {
+      width: min(180px, 44vw); height: min(180px, 44vw);
+      border-radius: 18px;
+      background: linear-gradient(135deg, #2d1b4e, #1a0a38);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 64px;
+      margin: 0 auto 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.5);
+      overflow: hidden;
+    }
+    .os-art img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }
+    .os-art.playing { box-shadow: 0 12px 40px rgba(0,0,0,.5), 0 0 0 2px rgba(10,132,255,.4); }
+
+    .os-info { text-align: center; margin-bottom: 16px; }
+    .os-title  { font-size: 21px; font-weight: 700; letter-spacing: -.4px; }
+    .os-artist { font-size: 15px; color: var(--text2); margin-top: 4px; }
+
+    /* Overlay progress */
+    .os-prog-wrap { margin-bottom: 16px; }
+    .os-prog-bar { height: 4px; background: rgba(255,255,255,.14); border-radius: 2px; cursor: pointer; }
+    .os-prog-fill {
+      height: 100%; width: 0%; background: white; border-radius: 2px;
+      transition: width .4s linear;
+    }
+    .os-prog-times {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--text2); margin-top: 5px;
+    }
+
+    /* Overlay controls */
+    .os-controls {
+      display: flex; align-items: center;
+      justify-content: center; gap: 28px; margin-bottom: 18px;
+    }
+    .os-skip { background: none; border: none; color: var(--text); cursor: pointer; opacity: .85; transition: transform .1s; }
+    .os-skip:active { transform: scale(.85); }
+    .os-skip svg { width: 30px; height: 30px; fill: currentColor; }
+    .os-play-btn {
+      width: 68px; height: 68px; border-radius: 50%;
+      background: white; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(255,255,255,.15);
+      transition: transform .12s;
+    }
+    .os-play-btn:active { transform: scale(.90); }
+    .os-play-btn svg { width: 30px; height: 30px; fill: black; }
+
+    /* Volume */
+    .os-vol { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .os-vol-ic { font-size: 16px; color: var(--text2); }
+    input[type=range] {
+      flex: 1; -webkit-appearance: none;
+      height: 3px; background: rgba(255,255,255,.15);
+      border-radius: 2px; outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px;
+      background: #fff; border-radius: 50%;
+      box-shadow: 0 1px 4px rgba(0,0,0,.3);
+    }
+
+    /* Bottom actions */
+    .os-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .os-action-btn {
+      border-radius: 13px; padding: 13px; border: none; cursor: pointer;
+      font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity .15s;
+    }
+    .os-action-btn:active { opacity: .7; }
+    .btn-amz { background: #1c2a3a; color: #ff9900; }
+    .btn-file { background: rgba(255,255,255,.08); color: white; }
+
+    audio { display: none; }
+
+    /* ═══════════════════════════════════
+       PORTRAIT FALLBACK
+    ═══════════════════════════════════ */
+    @media (orientation: portrait) {
+      :root { --sb-w: auto; --rp-w: auto; }
+      #app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 56px 1fr 160px;
+        padding: 0; gap: 0;
+      }
+      #sidebar {
+        flex-direction: row; border-radius: 0;
+        padding: max(10px, env(safe-area-inset-top,10px)) 16px 10px;
+        border: none; border-bottom: 1px solid rgba(255,255,255,.08);
+        align-items: flex-end;
+        box-shadow: 0 2px 12px rgba(0,0,0,.3);
+      }
+      .sb-time { font-size: 17px; margin: 0 12px 0 0; }
+      .sb-battery { font-size: 15px; margin: 0 auto 0 0; }
+      .sb-apps { flex-direction: row; gap: 12px; flex: unset; justify-content: center; }
+      .app-icon { width: 40px; height: 40px; border-radius: 11px; box-shadow: none; }
+      .app-icon svg { width: 22px; height: 22px; }
+      .app-icon.active::before {
+        left: 50%; top: auto; bottom: -9px;
+        transform: translateX(-50%);
+        width: 22px; height: 3px; border-radius: 2px;
+      }
+      .sb-grid { display: none; }
+      #map-area { border-radius: 0; border: none; }
+      #right-panel {
+        flex-direction: row;
+        padding: 8px; gap: 8px;
+        border-top: 1px solid rgba(255,255,255,.07);
+        background: rgba(10,14,28,.95);
+      }
+      .np-card  { flex: 1; border-radius: 14px; padding: 10px 12px 8px; min-width: 0; }
+      .np-art   { width: 44px; height: 44px; border-radius: 8px; font-size: 22px; margin-bottom: 6px; }
+      .np-title  { font-size: 13px; }
+      .np-artist { font-size: 11px; margin-bottom: 6px; }
+      .np-controls { gap: 14px; }
+      .np-play  { width: 36px; height: 36px; }
+      .np-play svg { width: 17px; height: 17px; }
+      .np-btn.sm svg { width: 18px; height: 18px; }
+      .np-prog-bar { margin-bottom: 6px; }
+      .dw-card  { flex: 1; border-radius: 14px; padding: 10px 12px; }
+      .dw-date  { font-size: 13px; margin-bottom: 6px; }
+      .dw-temp  { font-size: 24px; }
+      .dw-icon  { font-size: 20px; }
+      .dw-cond  { font-size: 11px; margin-bottom: 4px; }
+      .dw-loc   { font-size: 10px; }
+      .dw-src   { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside id="sidebar">
+    <div class="sb-time" id="sb-time">00:00</div>
+    <div class="sb-battery">🔋</div>
+
+    <div class="sb-apps">
+      <button class="app-icon icon-maps active" id="icon-map" onclick="setActiveIcon('map')">
+        <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+      </button>
+      <button class="app-icon icon-music" id="icon-music" onclick="setActiveIcon('music'); openOverlay()">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      </button>
+      <button class="app-icon icon-phone" id="icon-phone" onclick="setActiveIcon('phone')">
+        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+      </button>
+    </div>
+
+    <button class="sb-grid">
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+    </button>
+  </aside>
+
+  <!-- ── MAP ── -->
+  <div id="map-area">
+    <div id="leaflet-map"></div>
+
+    <button class="mb mb-search" onclick="">🔍</button>
+
+    <button class="mb mb-compass" id="compass-btn" onclick="resetNorth()">
+      <svg width="22" height="22" viewBox="0 0 24 24">
+        <polygon points="12,2 14,10 12,12 10,10" fill="#ff3b30"/>
+        <polygon points="12,22 14,14 12,12 10,14" fill="rgba(255,255,255,.65)"/>
+      </svg>
+    </button>
+
+    <button class="mb mb-type">
+      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+    </button>
+
+    <button class="mb mb-expand" onclick="toggleExpand()">
+      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+    </button>
+
+    <div class="map-speed">
+      <div class="map-speed-val"><span id="m-speed">—</span></div>
+      <div class="map-speed-unit">km/h</div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <aside id="right-panel">
+
+    <!-- Now Playing card -->
+    <div class="np-card" onclick="openOverlay()">
+      <div class="np-art" id="np-art">🎵</div>
+      <div class="np-title"  id="np-title">Not Playing</div>
+      <div class="np-artist" id="np-artist"></div>
+
+      <div class="np-prog-bar" id="np-prog">
+        <div class="np-prog-fill" id="np-fill"></div>
+      </div>
+
+      <div class="np-controls">
+        <button class="np-btn sm" onclick="event.stopPropagation(); prevTrack()">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+        <button class="np-play" id="np-play" onclick="event.stopPropagation(); togglePlay()">
+          <svg viewBox="0 0 24 24" id="np-play-icon"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="np-btn sm" onclick="event.stopPropagation(); nextTrack()">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Date & Weather card -->
+    <div class="dw-card">
+      <div class="dw-date" id="dw-date">–</div>
+      <div class="dw-temp-row">
+        <span class="dw-icon" id="dw-icon">⏳</span>
+        <span class="dw-temp" id="dw-temp">–°</span>
+      </div>
+      <div class="dw-cond" id="dw-cond">Lade Wetter …</div>
+      <div class="dw-loc">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(255,255,255,.5)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        <span id="dw-loc">–</span>
+      </div>
+      <div class="dw-src">Wetterdaten via Open-Meteo</div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- ── MUSIC OVERLAY ── -->
+<div id="overlay" onclick="closeOverlay()">
+  <div class="overlay-sheet" onclick="event.stopPropagation()">
+    <div class="os-handle"></div>
+
+    <div class="os-art" id="os-art">🎵</div>
+
+    <div class="os-info">
+      <div class="os-title"  id="os-title">Kein Titel</div>
+      <div class="os-artist" id="os-artist">Unbekannter Künstler</div>
+    </div>
+
+    <div class="os-prog-wrap">
+      <div class="os-prog-bar" id="os-prog">
+        <div class="os-prog-fill" id="os-fill"></div>
+      </div>
+      <div class="os-prog-times">
+        <span id="os-t-cur">0:00</span>
+        <span id="os-t-tot">0:00</span>
+      </div>
+    </div>
+
+    <div class="os-controls">
+      <button class="os-skip" onclick="prevTrack()">
+        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      </button>
+      <button class="os-play-btn" id="os-play" onclick="togglePlay()">
+        <svg viewBox="0 0 24 24" id="os-play-icon"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button class="os-skip" onclick="nextTrack()">
+        <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+      </button>
+    </div>
+
+    <div class="os-vol">
+      <span class="os-vol-ic">🔈</span>
+      <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8">
+      <span class="os-vol-ic">🔊</span>
+    </div>
+
+    <div class="os-actions">
+      <a class="os-action-btn btn-amz" href="https://music.amazon.de" target="_blank" rel="noopener">
+        🎵 Amazon Music öffnen
+      </a>
+      <label class="os-action-btn btn-file">
+        <input type="file" id="file-in" accept="audio/*" multiple style="display:none">
+        📂 Lokale Musik laden
+      </label>
+    </div>
+
+    <audio id="audio"></audio>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ═══════════════════════════════════
+   CLOCK / DATE
+═══════════════════════════════════ */
+const DAYS   = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const MONTHS_SHORT = ['Jan.','Feb.','März','Apr.','Mai','Juni','Juli','Aug.','Sept.','Okt.','Nov.','Dez.'];
+
+function tick() {
+  const n = new Date();
+  const hh = String(n.getHours()).padStart(2,'0');
+  const mm = String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('sb-time').textContent = `${hh}:${mm}`;
+
+  // Date card — match "Monday, 10. Aug 2026" style
+  const day = DAYS[n.getDay()];
+  const date = `${day}, ${n.getDate()}. ${MONTHS_SHORT[n.getMonth()]} ${n.getFullYear()}`;
+  document.getElementById('dw-date').textContent = date;
+}
+setInterval(tick, 1000);
+tick();
+
+/* ═══════════════════════════════════
+   WEATHER
+═══════════════════════════════════ */
+const WMO = {
+  0: ['☀️','Klarer Himmel'],   1:['🌤️','Überwiegend klar'],
+  2: ['⛅','Teilweise bewölkt'],3:['☁️','Bewölkt'],
+  45:['🌫️','Nebel'],           48:['🌫️','Gefrierender Nebel'],
+  51:['🌦️','Leichter Nieselregen'],53:['🌦️','Nieselregen'],55:['🌧️','Starker Nieselregen'],
+  61:['🌧️','Leichter Regen'],  63:['🌧️','Regen'],65:['🌧️','Starker Regen'],
+  71:['🌨️','Leichter Schnee'], 73:['🌨️','Schnee'],75:['❄️','Starker Schnee'],
+  77:['🌨️','Schneegriesel'],
+  80:['🌦️','Leichte Schauer'], 81:['🌧️','Schauer'],82:['⛈️','Heftige Schauer'],
+  85:['🌨️','Schneeschauer'],   86:['❄️','Starke Schneeschauer'],
+  95:['⛈️','Gewitter'],        96:['⛈️','Gewitter mit Hagel'],99:['⛈️','Schweres Gewitter'],
+};
+
+let wxDone = false;
+async function fetchWeather(lat, lon) {
+  if (wxDone) return; wxDone = true;
+  try {
+    const [wRes, gRes] = await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&wind_speed_unit=kmh&timezone=auto`),
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de`),
+    ]);
+    const w = await wRes.json(), g = await gRes.json();
+    const c = w.current, code = c.weather_code;
+    const [icon, cond] = WMO[code] || ['🌡️', 'Unbekannt'];
+    const city = g.address?.city || g.address?.town || g.address?.village || g.address?.county || 'Mein Standort';
+
+    document.getElementById('dw-icon').textContent = icon;
+    document.getElementById('dw-temp').textContent = `${Math.round(c.temperature_2m)}°`;
+    document.getElementById('dw-cond').textContent = cond;
+    document.getElementById('dw-loc').textContent  = city;
+  } catch {
+    document.getElementById('dw-cond').textContent = 'Keine Verbindung';
+    document.getElementById('dw-icon').textContent = '❓';
+  }
+}
+
+/* ═══════════════════════════════════
+   MAP + GPS
+═══════════════════════════════════ */
+let map = null, marker = null, circle = null, following = true;
+
+function initMap() {
+  if (map) { map.invalidateSize(); return; }
+  map = L.map('leaflet-map', { zoomControl:false, attributionControl:false })
+         .setView([51.1657, 10.4515], 6);
+
+  // Standard OpenStreetMap tiles — colorful like Apple Maps
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 20 }).addTo(map);
+
+  map.on('dragstart', () => following = false);
+}
+
+document.getElementById('compass-btn').addEventListener('click', () => {
+  if (map) map.setBearing ? map.setBearing(0) : null;
+});
+
+let expanded = false;
+function toggleExpand() {
+  expanded = !expanded;
+  const rp = document.getElementById('right-panel');
+  const sb = document.getElementById('sidebar');
+  rp.style.display = expanded ? 'none' : '';
+  sb.style.display = expanded ? 'none' : '';
+  document.getElementById('app').style.gridTemplateColumns = expanded
+    ? '1fr' : 'var(--sb-w) 1fr var(--rp-w)';
+  if (map) setTimeout(() => map.invalidateSize(), 50);
+}
+
+function resetNorth() {
+  if (map) map.setView(map.getCenter(), map.getZoom(), { animate:true });
+}
+
+function startGPS() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.watchPosition(onPos, onErr, {
+    enableHighAccuracy: true, timeout: 30000, maximumAge: 1500,
+  });
+}
+
+function onPos(p) {
+  const { latitude:lat, longitude:lon, accuracy, speed } = p.coords;
+  document.getElementById('m-speed').textContent = speed != null ? Math.round(speed*3.6) : '0';
+  fetchWeather(lat, lon);
+  if (!map) return;
+  const ll = [lat, lon];
+  if (!marker) {
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:20px;height:20px;background:#007aff;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,.4);position:relative">
+               <div style="position:absolute;inset:-6px;border-radius:50%;background:rgba(0,122,255,.15);animation:gps-ring 2s ease-out infinite"></div>
+             </div>`,
+      iconSize:[20,20], iconAnchor:[10,10],
+    });
+    marker = L.marker(ll,{icon}).addTo(map);
+    circle = L.circle(ll, { radius:accuracy, color:'#007aff', fillColor:'#007aff', fillOpacity:.07, weight:1 }).addTo(map);
+    map.setView(ll, 15, {animate:true});
+  } else {
+    marker.setLatLng(ll); circle.setLatLng(ll); circle.setRadius(accuracy);
+    if (following) map.setView(ll, Math.max(map.getZoom(),15), {animate:true,duration:.6});
+  }
+}
+
+function onErr(e) {
+  console.warn('GPS:', e.message);
+  document.getElementById('m-speed').textContent = '—';
+}
+
+/* ═══════════════════════════════════
+   SIDEBAR ICON STATE
+═══════════════════════════════════ */
+function setActiveIcon(id) {
+  document.querySelectorAll('.app-icon').forEach(el => el.classList.remove('active'));
+  document.getElementById(`icon-${id}`)?.classList.add('active');
+}
+
+/* ═══════════════════════════════════
+   MUSIC PLAYER
+═══════════════════════════════════ */
+let audio    = document.getElementById('audio');
+let playlist = [], trackIdx = 0, isPlaying = false;
+
+function fmtTime(s) {
+  if (!isFinite(s)) return '0:00';
+  return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+}
+
+function syncUI(playing) {
+  isPlaying = playing;
+  const pause = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+  const play  = '<path d="M8 5v14l11-7z"/>';
+  const svg   = playing ? pause : play;
+  document.getElementById('np-play-icon').innerHTML = svg;
+  document.getElementById('os-play-icon').innerHTML = svg;
+  document.getElementById('np-art').classList.toggle('playing', playing);
+  document.getElementById('os-art').classList.toggle('playing', playing);
+}
+
+function loadTrack(i) {
+  const t = playlist[i];
+  audio.src = t.url;
+  const name = t.name, artist = t.artist || '';
+  document.getElementById('np-title').textContent  = name;
+  document.getElementById('os-title').textContent  = name;
+  document.getElementById('np-artist').textContent = artist;
+  document.getElementById('os-artist').textContent = artist;
+  audio.play().then(()=>syncUI(true)).catch(()=>{});
+}
+
+function togglePlay() {
+  if (!playlist.length) { openOverlay(); return; }
+  if (isPlaying) { audio.pause(); syncUI(false); }
+  else { audio.play().then(()=>syncUI(true)).catch(()=>{}); }
+}
+
+function prevTrack() {
+  if (!playlist.length) return;
+  trackIdx = (trackIdx - 1 + playlist.length) % playlist.length;
+  loadTrack(trackIdx);
+}
+function nextTrack() {
+  if (!playlist.length) return;
+  trackIdx = (trackIdx + 1) % playlist.length;
+  loadTrack(trackIdx);
+}
+
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  const pct = (audio.currentTime / audio.duration) * 100;
+  document.getElementById('np-fill').style.width   = `${pct}%`;
+  document.getElementById('os-fill').style.width   = `${pct}%`;
+  document.getElementById('os-t-cur').textContent  = fmtTime(audio.currentTime);
+  document.getElementById('os-t-tot').textContent  = fmtTime(audio.duration);
+});
+
+audio.addEventListener('ended', nextTrack);
+audio.addEventListener('play',  () => syncUI(true));
+audio.addEventListener('pause', () => syncUI(false));
+
+// Progress bar clicks
+['np-prog','os-prog'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', e => {
+    if (!audio.duration) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+  });
+});
+
+document.getElementById('vol').addEventListener('input', e => audio.volume = +e.target.value);
+
+document.getElementById('file-in').addEventListener('change', e => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  playlist = files.map(f => ({
+    url: URL.createObjectURL(f),
+    name: f.name.replace(/\.[^.]+$/, ''),
+    artist: '',
+  }));
+  trackIdx = 0;
+  loadTrack(0);
+});
+
+/* ═══════════════════════════════════
+   MUSIC OVERLAY
+═══════════════════════════════════ */
+function openOverlay() {
+  document.getElementById('overlay').classList.add('show');
+}
+function closeOverlay() {
+  document.getElementById('overlay').classList.remove('show');
+  setActiveIcon('map');
+}
+
+/* ═══════════════════════════════════
+   BOOT
+═══════════════════════════════════ */
+initMap();
+startGPS();
+
+// Add CSS for GPS ring animation
+const style = document.createElement('style');
+style.textContent = '@keyframes gps-ring { 0% { opacity:.6; transform:scale(1); } 100% { opacity:0; transform:scale(2.5); } }';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
