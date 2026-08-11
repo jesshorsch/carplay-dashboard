@@ -903,6 +903,53 @@ document.getElementById('file-in').addEventListener('change', e => {
 });
 
 /* ═══════════════════════════════════
+   LAST.FM INTEGRATION
+═══════════════════════════════════ */
+const LASTFM_API_KEY = '';  // ← last.fm/api/account/create
+const LASTFM_USER    = '';  // ← dein Last.fm Benutzername
+const LASTFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
+
+let lfmTimer = null;
+
+async function pollLastFm() {
+  if (!LASTFM_API_KEY || !LASTFM_USER) return;
+  try {
+    const res  = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getRecentTracks&user=${encodeURIComponent(LASTFM_USER)}&api_key=${LASTFM_API_KEY}&format=json&limit=1`);
+    const data = await res.json();
+    const tracks = data?.recenttracks?.track;
+    if (!tracks) return;
+    const track      = Array.isArray(tracks) ? tracks[0] : tracks;
+    const nowPlaying = track['@attr']?.nowplaying === 'true';
+    if (!nowPlaying) return;
+
+    const title  = track.name || '';
+    const artist = track.artist?.['#text'] || '';
+    const imgUrl = track.image?.slice().reverse()
+      .find(i => i['#text'] && !i['#text'].includes(LASTFM_PLACEHOLDER))?.['#text'] || '';
+
+    // Right panel card
+    document.getElementById('np-title').textContent  = title;
+    document.getElementById('np-artist').textContent = artist;
+    const npArt = document.getElementById('np-art');
+    npArt.innerHTML = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
+    npArt.classList.add('playing');
+
+    // Overlay
+    document.getElementById('os-title').textContent  = title;
+    document.getElementById('os-artist').textContent = artist;
+    const osArt = document.getElementById('os-art');
+    osArt.innerHTML = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
+    osArt.classList.add('playing');
+  } catch (_) { /* silent */ }
+}
+
+function startLfmPolling() {
+  if (!LASTFM_API_KEY || !LASTFM_USER) return;
+  pollLastFm();
+  lfmTimer = setInterval(pollLastFm, 10000);
+}
+
+/* ═══════════════════════════════════
    MUSIC OVERLAY
 ═══════════════════════════════════ */
 function openOverlay() {
@@ -918,6 +965,7 @@ function closeOverlay() {
 ═══════════════════════════════════ */
 initMap();
 startGPS();
+startLfmPolling();
 
 // Add CSS for GPS ring animation
 const style = document.createElement('style');
