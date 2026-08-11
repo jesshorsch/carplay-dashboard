@@ -471,18 +471,33 @@
 
     <div class="sb-apps">
       <button class="app-icon icon-maps active" id="icon-map" onclick="setActiveIcon('map')">
-        <!-- Apple Maps icon -->
+        <!-- Apple Maps icon faithful recreation -->
         <svg class="full-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <rect width="100" height="100" fill="#62B8F6"/>
-          <path d="M0 52 C20 45 42 50 62 46 S88 42 100 38 L100 100 L0 100Z" fill="#4CAF50"/>
-          <path d="M0 64 C22 58 48 62 72 59 L100 56 L100 100 L0 100Z" fill="#388E3C"/>
-          <path d="M68 0 L100 0 L100 32 C88 22 76 8 68 0Z" fill="#FF9F0A" opacity=".55"/>
-          <path d="M22 100 Q44 74 56 54 Q64 38 78 16" stroke="white" stroke-width="5.5" fill="none" stroke-linecap="round" opacity=".95"/>
-          <path d="M4 72 Q28 67 52 62 Q70 58 94 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" opacity=".6"/>
-          <circle cx="50" cy="37" r="16" fill="#1565C0"/>
-          <circle cx="50" cy="37" r="13.5" fill="#1E88E5"/>
-          <path d="M50 23 L54.5 37 L50 33.5 L45.5 37 Z" fill="white"/>
-          <path d="M50 51 L54.5 37 L50 40.5 L45.5 37 Z" fill="rgba(255,255,255,.28)"/>
+          <!-- Base: light gray -->
+          <rect width="100" height="100" fill="#F2F1F6"/>
+          <!-- Green top-left patch -->
+          <path d="M0 0 L37 0 L24 31 L0 19Z" fill="#5DC83E"/>
+          <!-- Blue vertical road (center) -->
+          <path d="M39 0 L51 0 L49 47 L37 41Z" fill="#3E8EF0"/>
+          <!-- Large green right section -->
+          <path d="M51 0 L100 0 L100 100 L61 100 L44 68 L49 47Z" fill="#5DC83E"/>
+          <!-- Gray curved highway top-right -->
+          <path d="M100 0 L100 0" fill="none"/>
+          <path d="M70 0 L100 0 L100 36 Q86 28 76 12Z" fill="#C6C5CC"/>
+          <path d="M100 0 A38 38 0 0 0 62 38 L70 38 A30 30 0 0 1 100 8Z" fill="white"/>
+          <path d="M100 0 A28 28 0 0 0 72 28 L78 28 A22 22 0 0 1 100 6Z" fill="#C6C5CC"/>
+          <!-- Pink bottom-left -->
+          <path d="M0 19 L24 31 L44 68 L29 100 L0 100Z" fill="#F06FCB"/>
+          <!-- Yellow bottom-right triangle -->
+          <path d="M61 100 L100 100 L100 70Z" fill="#FFC200"/>
+          <!-- White diagonal road separators -->
+          <path d="M0 17 L24 31 L49 47 L61 100 L53 100 L44 68 L19 31 L0 21Z" fill="white"/>
+          <!-- White ring around nav circle -->
+          <circle cx="46" cy="61" r="22" fill="white"/>
+          <!-- Blue nav circle -->
+          <circle cx="46" cy="61" r="19" fill="#3E8EF0"/>
+          <!-- White navigation A-arrow -->
+          <path d="M46 46 Q46 46 56 68 Q51 65 46 68 Q41 65 36 68 Q46 46 46 46Z" fill="white"/>
         </svg>
       </button>
       <button class="app-icon icon-music" id="icon-music" onclick="setActiveIcon('music'); openOverlay()">
