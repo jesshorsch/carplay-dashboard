@@ -920,7 +920,6 @@ async function pollLastFm() {
     if (!tracks) return;
     const track      = Array.isArray(tracks) ? tracks[0] : tracks;
     const nowPlaying = track['@attr']?.nowplaying === 'true';
-    if (!nowPlaying) return;
 
     const title  = track.name || '';
     const artist = track.artist?.['#text'] || '';
@@ -932,14 +931,14 @@ async function pollLastFm() {
     document.getElementById('np-artist').textContent = artist;
     const npArt = document.getElementById('np-art');
     npArt.innerHTML = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
-    npArt.classList.add('playing');
+    npArt.classList.toggle('playing', nowPlaying);
 
     // Overlay
     document.getElementById('os-title').textContent  = title;
     document.getElementById('os-artist').textContent = artist;
     const osArt = document.getElementById('os-art');
     osArt.innerHTML = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
-    osArt.classList.add('playing');
+    osArt.classList.toggle('playing', nowPlaying);
   } catch (_) { /* silent */ }
 }
 
