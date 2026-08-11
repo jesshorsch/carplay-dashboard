@@ -107,11 +107,11 @@
       border-radius: 0 3px 3px 0;
     }
 
-    .icon-maps  { background: linear-gradient(145deg, #48b9f7, #1e88e5); }
-    .icon-music { background: linear-gradient(145deg, #f8647c, #c1274a); }
-    .icon-phone { background: linear-gradient(145deg, #4cd964, #1d9e38); }
+    .icon-maps, .icon-music, .icon-phone { background: none; }
 
-    .app-icon svg { width: 32px; height: 32px; fill: white; }
+    .app-icon { overflow: hidden; }
+    .app-icon svg.full-icon { width: 100%; height: 100%; display: block; }
+    .app-icon svg.glyph { width: 32px; height: 32px; fill: white; }
 
     .sb-grid {
       width: 52px; height: 52px;
@@ -471,16 +471,54 @@
 
     <div class="sb-apps">
       <button class="app-icon icon-maps active" id="icon-map" onclick="setActiveIcon('map')">
-        <!-- SF Symbol: location.fill -->
-        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        <!-- Apple Maps icon -->
+        <svg class="full-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="#62B8F6"/>
+          <path d="M0 52 C20 45 42 50 62 46 S88 42 100 38 L100 100 L0 100Z" fill="#4CAF50"/>
+          <path d="M0 64 C22 58 48 62 72 59 L100 56 L100 100 L0 100Z" fill="#388E3C"/>
+          <path d="M68 0 L100 0 L100 32 C88 22 76 8 68 0Z" fill="#FF9F0A" opacity=".55"/>
+          <path d="M22 100 Q44 74 56 54 Q64 38 78 16" stroke="white" stroke-width="5.5" fill="none" stroke-linecap="round" opacity=".95"/>
+          <path d="M4 72 Q28 67 52 62 Q70 58 94 60" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" opacity=".6"/>
+          <circle cx="50" cy="37" r="16" fill="#1565C0"/>
+          <circle cx="50" cy="37" r="13.5" fill="#1E88E5"/>
+          <path d="M50 23 L54.5 37 L50 33.5 L45.5 37 Z" fill="white"/>
+          <path d="M50 51 L54.5 37 L50 40.5 L45.5 37 Z" fill="rgba(255,255,255,.28)"/>
+        </svg>
       </button>
       <button class="app-icon icon-music" id="icon-music" onclick="setActiveIcon('music'); openOverlay()">
-        <!-- SF Symbol: music.note -->
-        <svg viewBox="0 0 24 24"><path d="M9 17c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3c.37 0 .72.07 1.05.18V5.37L20 3.22v2.25L9 7.61V17zm0-11.61V7.6l11-2.13V3.22L9 5.39z"/></svg>
+        <!-- Apple Music icon -->
+        <svg class="full-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="mus-g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#FC5C7D"/>
+              <stop offset="100%" stop-color="#AC0245"/>
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" fill="url(#mus-g)"/>
+          <!-- beam -->
+          <path d="M30 30 L74 22 L74 32 L30 40 Z" fill="white"/>
+          <!-- left stem -->
+          <rect x="30" y="30" width="8" height="43" rx="4" fill="white"/>
+          <!-- right stem -->
+          <rect x="66" y="22" width="8" height="44" rx="4" fill="white"/>
+          <!-- left notehead -->
+          <ellipse cx="32" cy="71" rx="14" ry="9.5" fill="white" transform="rotate(-18 32 71)"/>
+          <!-- right notehead -->
+          <ellipse cx="64" cy="65" rx="14" ry="9.5" fill="white" transform="rotate(-18 64 65)"/>
+        </svg>
       </button>
       <button class="app-icon icon-phone" id="icon-phone" onclick="setActiveIcon('phone')">
-        <!-- SF Symbol: phone.fill -->
-        <svg viewBox="0 0 24 24"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
+        <!-- Apple Phone icon -->
+        <svg class="full-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="phn-g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#5EDD6F"/>
+              <stop offset="100%" stop-color="#25A336"/>
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" fill="url(#phn-g)"/>
+          <path d="M78.5 64.8c-5.1 0-10-.84-14.6-2.34a4 4 0 00-4.06.96l-7.9 7.9C44 66.5 33.5 56 28.7 48.1l7.9-7.9a4 4 0 00.96-4.06C35.84 31.5 35 26.6 35 21.5c0-2.2-1.8-4-4-4H18c-2.2 0-4 1.8-4 4C14 63.1 36.9 86 78.5 86c2.2 0 4-1.8 4-4V68.8c0-2.2-1.8-4-4-4z" fill="white"/>
+        </svg>
       </button>
     </div>
 
