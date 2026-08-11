@@ -721,10 +721,22 @@ async function fetchWeather(lat, lon) {
 ═══════════════════════════════════ */
 let map = null, marker = null, circle = null, following = true;
 
+const CACHE_KEY = 'cardash_last_pos';
+
+function savePos(lat, lon) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ lat, lon })); } catch {}
+}
+function loadPos() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch { return null; }
+}
+
 function initMap() {
   if (map) { map.invalidateSize(); return; }
+  const cached = loadPos();
+  const startView = cached ? [cached.lat, cached.lon] : [51.1657, 10.4515];
+  const startZoom = cached ? 15 : 6;
   map = L.map('leaflet-map', { zoomControl:false, attributionControl:false })
-         .setView([51.1657, 10.4515], 6);
+         .setView(startView, startZoom);
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     subdomains: 'abcd', maxZoom: 20,
@@ -763,6 +775,7 @@ function startGPS() {
 function onPos(p) {
   const { latitude:lat, longitude:lon, accuracy, speed } = p.coords;
   document.getElementById('m-speed').textContent = speed != null ? Math.round(speed*3.6) : '0';
+  savePos(lat, lon);
   fetchWeather(lat, lon);
   if (!map) return;
   const ll = [lat, lon];
