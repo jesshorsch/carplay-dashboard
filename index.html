@@ -75,10 +75,17 @@
       margin-bottom: 5px;
     }
 
-    .sb-battery {
-      font-size: 18px; opacity: .75;
+    .sb-conn {
       margin-bottom: 22px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
     }
+    .sb-conn svg { width: 20px; height: 20px; }
+    .sb-conn-label {
+      font-size: 9px; font-weight: 600; letter-spacing: .4px;
+      color: rgba(255,255,255,.6);
+    }
+    .sb-conn.offline svg { opacity: .3; }
+    .sb-conn.offline .sb-conn-label { color: rgba(255,255,255,.3); }
 
     .sb-apps {
       flex: 1;
@@ -467,7 +474,12 @@
   <!-- ── SIDEBAR ── -->
   <aside id="sidebar">
     <div class="sb-time" id="sb-time">00:00</div>
-    <div class="sb-battery">🔋</div>
+    <div class="sb-conn" id="sb-conn">
+      <svg viewBox="0 0 24 24" fill="white">
+        <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+      </svg>
+      <span class="sb-conn-label" id="sb-conn-label">ONLINE</span>
+    </div>
 
     <div class="sb-apps">
       <button class="app-icon icon-maps active" id="icon-map" onclick="setActiveIcon('map')">
@@ -962,6 +974,21 @@ function closeOverlay() {
 /* ═══════════════════════════════════
    BOOT
 ═══════════════════════════════════ */
+function updateConn() {
+  const el    = document.getElementById('sb-conn');
+  const label = document.getElementById('sb-conn-label');
+  if (navigator.onLine) {
+    el.classList.remove('offline');
+    label.textContent = 'ONLINE';
+  } else {
+    el.classList.add('offline');
+    label.textContent = 'OFFLINE';
+  }
+}
+window.addEventListener('online',  updateConn);
+window.addEventListener('offline', updateConn);
+updateConn();
+
 initMap();
 startGPS();
 startLfmPolling();
