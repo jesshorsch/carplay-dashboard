@@ -46,7 +46,7 @@
       height: 100dvh;
       padding: var(--gap);
       padding-top: max(var(--gap), env(safe-area-inset-top, 0px));
-      padding-bottom: max(34px, env(safe-area-inset-bottom, 34px));
+      padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
       display: grid;
       grid-template-columns: var(--sb-w) 1fr var(--rp-w);
       grid-template-rows: 1fr;
@@ -65,18 +65,18 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 18px 0 18px;
+      padding: 12px 0 12px;
       gap: 0;
     }
 
     .sb-time {
-      font-size: 26px; font-weight: 600;
+      font-size: 22px; font-weight: 600;
       letter-spacing: -1px; line-height: 1;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
 
     .sb-conn {
-      margin-bottom: 22px;
+      margin-bottom: 12px;
       display: flex; flex-direction: column; align-items: center; gap: 3px;
     }
     .sb-conn svg { width: 20px; height: 20px; }
@@ -91,11 +91,11 @@
       flex: 1;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 16px;
+      gap: 10px;
     }
 
     .app-icon {
-      width: 64px; height: 64px; border-radius: 18px;
+      width: 56px; height: 56px; border-radius: 16px;
       border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: transform .12s, box-shadow .2s;
@@ -209,7 +209,7 @@
       backdrop-filter: blur(40px) saturate(200%);
       -webkit-backdrop-filter: blur(40px) saturate(200%);
       border: 1px solid rgba(255,255,255,.16);
-      padding: 18px 16px 14px;
+      padding: 12px 14px 10px;
       display: flex; flex-direction: column;
       align-items: center; gap: 0;
       cursor: pointer;
@@ -227,12 +227,12 @@
     }
 
     .np-art {
-      width: 80px; height: 80px; border-radius: 14px;
+      width: 64px; height: 64px; border-radius: 12px;
       background: rgba(140,150,180,.35);
       display: flex; align-items: center; justify-content: center;
-      font-size: 36px;
+      font-size: 28px;
       flex-shrink: 0;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
       overflow: hidden;
       box-shadow: 0 4px 16px rgba(0,0,0,.3);
     }
@@ -243,15 +243,15 @@
       50%      { box-shadow: 0 6px 24px rgba(10,132,255,.3), 0 4px 16px rgba(0,0,0,.2); }
     }
 
-    .np-title  { font-size: 18px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 2px; text-align: center; }
-    .np-artist { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 8px; }
+    .np-title  { font-size: 15px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 1px; text-align: center; }
+    .np-artist { font-size: 12px; color: var(--text2); text-align: center; margin-bottom: 5px; }
 
     /* Progress in card */
     .np-prog-bar {
       width: 100%; height: 3px;
       background: rgba(255,255,255,.18);
       border-radius: 2px; cursor: pointer;
-      margin-bottom: 8px; overflow: hidden;
+      margin-bottom: 5px; overflow: hidden;
     }
     .np-prog-fill {
       height: 100%; width: 0%;
@@ -263,7 +263,7 @@
     /* Controls in card */
     .np-controls {
       display: flex; align-items: center; justify-content: center;
-      gap: 24px; width: 100%;
+      gap: 18px; width: 100%;
     }
     .np-btn {
       background: none; border: none; color: var(--text);
@@ -275,7 +275,7 @@
     .np-btn.sm svg { width: 24px; height: 24px; }
 
     .np-play {
-      width: 52px; height: 52px; border-radius: 50%;
+      width: 42px; height: 42px; border-radius: 50%;
       background: rgba(255,255,255,.18);
       border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
@@ -292,26 +292,26 @@
       backdrop-filter: blur(30px) saturate(180%);
       -webkit-backdrop-filter: blur(30px) saturate(180%);
       border: 1px solid rgba(255,255,255,.11);
-      padding: 18px 20px 14px;
+      padding: 10px 16px 10px;
       display: flex; flex-direction: column; justify-content: center;
       box-shadow: 0 8px 32px rgba(0,0,0,.5);
     }
 
-    .dw-date { font-size: 20px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 14px; }
+    .dw-date { font-size: 15px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 8px; }
 
-    .dw-main-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .dw-main-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 
     .dw-icon-wrap {
-      width: 58px; height: 58px; flex-shrink: 0;
+      width: 46px; height: 46px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
     }
     .dw-icon-wrap svg { width: 100%; height: 100%; }
 
     .dw-temp-col { display: flex; flex-direction: column; gap: 1px; }
-    .dw-temp { font-size: 44px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
-    .dw-cond { font-size: 15px; color: var(--text2); margin-top: 2px; }
+    .dw-temp { font-size: 36px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
+    .dw-cond { font-size: 12px; color: var(--text2); margin-top: 2px; }
 
-    .dw-loc   { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+    .dw-loc   { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); margin-bottom: 2px; }
     .dw-src   { font-size: 10px; color: var(--text3); }
 
     /* ═══════════════════════════════════
