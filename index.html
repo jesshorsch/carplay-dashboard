@@ -982,15 +982,16 @@ document.getElementById('file-in').addEventListener('change', e => {
 });
 
 /* ═══════════════════════════════════
-   LAST.FM INTEGRATION
+   NOW PLAYING (Supabase + Last.fm Art)
 ═══════════════════════════════════ */
-const LASTFM_API_KEY = 'bf4f954710cb7eaaa2038208abbd9cb5';
-const LASTFM_USER    = 'jesshorsch';
+const SB_URL  = 'https://nsyhxfkdbaernukjenxz.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zeWh4ZmtkYmFlcm51a2plbnh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NTM2MDEsImV4cCI6MjEwMTUyOTYwMX0.hdFL4VUZTTGpcOlICn4NK6cPjawi1NblV-nZsH3HcE8';
+const LASTFM_API_KEY  = 'bf4f954710cb7eaaa2038208abbd9cb5';
 const LASTFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
 
-let lfmTimer = null;
+let npTimer = null, lastNpKey = '';
 
-function lfmSetIdle() {
+function npSetIdle() {
   document.getElementById('np-title').textContent  = 'Nichts läuft';
   document.getElementById('np-artist').textContent = '';
   document.getElementById('np-art').innerHTML = '🎵';
@@ -999,51 +1000,57 @@ function lfmSetIdle() {
   document.getElementById('os-artist').textContent = 'Unbekannter Künstler';
   document.getElementById('os-art').innerHTML = '🎵';
   document.getElementById('os-art').classList.remove('playing');
+  lastNpKey = '';
 }
 
-async function pollLastFm() {
-  if (!LASTFM_API_KEY || !LASTFM_USER) return;
+async function fetchArt(artist, title) {
   try {
-    const res  = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getRecentTracks&user=${encodeURIComponent(LASTFM_USER)}&api_key=${LASTFM_API_KEY}&format=json&limit=1`);
-    const data = await res.json();
-    const tracks = data?.recenttracks?.track;
-    if (!tracks) { lfmSetIdle(); return; }
-
-    const track      = Array.isArray(tracks) ? tracks[0] : tracks;
-    const nowPlaying = track['@attr']?.nowplaying === 'true';
-
-    // If not currently playing, check how long ago it was scrobbled
-    if (!nowPlaying) {
-      const uts = parseInt(track.date?.uts || '0');
-      const ageMinutes = (Date.now() / 1000 - uts) / 60;
-      if (ageMinutes > 10) { lfmSetIdle(); return; }
-    }
-
-    const title  = track.name || '';
-    const artist = track.artist?.['#text'] || '';
-    const imgUrl = track.image?.slice().reverse()
+    const r = await fetch(`https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=${LASTFM_API_KEY}&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(title)}&format=json`);
+    const d = await r.json();
+    return d?.track?.album?.image?.slice().reverse()
       .find(i => i['#text'] && !i['#text'].includes(LASTFM_PLACEHOLDER))?.['#text'] || '';
+  } catch { return ''; }
+}
 
-    // Right panel card
+async function pollNowPlaying() {
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/now_playing?id=eq.1&select=title,artist,is_playing,updated_at`,
+      { headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` } }
+    );
+    const [row] = await res.json();
+    if (!row) { npSetIdle(); return; }
+
+    const { title, artist, is_playing, updated_at } = row;
+    const ageSec = (Date.now() - new Date(updated_at)) / 1000;
+
+    if (!title || ageSec > 150) { npSetIdle(); return; }
+
+    // Update text
     document.getElementById('np-title').textContent  = title;
     document.getElementById('np-artist').textContent = artist;
-    const npArt = document.getElementById('np-art');
-    npArt.innerHTML = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
-    npArt.classList.toggle('playing', nowPlaying);
-
-    // Overlay
+    document.getElementById('np-art').classList.toggle('playing', is_playing);
     document.getElementById('os-title').textContent  = title;
     document.getElementById('os-artist').textContent = artist;
-    const osArt = document.getElementById('os-art');
-    osArt.innerHTML = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
-    osArt.classList.toggle('playing', nowPlaying);
+    document.getElementById('os-art').classList.toggle('playing', is_playing);
+
+    // Fetch art only when track changes
+    const key = `${artist}|${title}`;
+    if (key !== lastNpKey) {
+      lastNpKey = key;
+      const imgUrl = await fetchArt(artist, title);
+      const html = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
+      document.getElementById('np-art').innerHTML = html;
+      document.getElementById('os-art').innerHTML = html;
+      document.getElementById('np-art').classList.toggle('playing', is_playing);
+      document.getElementById('os-art').classList.toggle('playing', is_playing);
+    }
   } catch (_) { /* silent */ }
 }
 
-function startLfmPolling() {
-  if (!LASTFM_API_KEY || !LASTFM_USER) return;
-  pollLastFm();
-  lfmTimer = setInterval(pollLastFm, 5000);
+function startNpPolling() {
+  pollNowPlaying();
+  npTimer = setInterval(pollNowPlaying, 5000);
 }
 
 /* ═══════════════════════════════════
@@ -1078,7 +1085,7 @@ updateConn();
 initMap();
 setFollowing(true);
 startGPS();
-startLfmPolling();
+startNpPolling();
 
 // Add CSS for GPS ring animation
 const style = document.createElement('style');
