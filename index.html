@@ -1011,7 +1011,10 @@ async function pollNowPlaying() {
     );
     const d = await res.json();
     const track = d?.recenttracks?.track?.[0];
-    if (!track || track['@attr']?.nowplaying !== 'true') { npSetIdle(); return; }
+    if (!track) { npSetIdle(); return; }
+    const isNowPlaying = track['@attr']?.nowplaying === 'true';
+    const ageSec = track.date?.uts ? (Date.now() / 1000 - Number(track.date.uts)) : Infinity;
+    if (!isNowPlaying && ageSec > 240) { npSetIdle(); return; }
 
     const title  = track.name;
     const artist = track.artist['#text'];
