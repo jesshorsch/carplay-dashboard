@@ -1069,18 +1069,18 @@ function npCardClick() {
 }
 
 async function pollNowPlaying() {
-  const token = await _spToken();
-  if (!token) {
-    document.getElementById('np-title').textContent = 'Spotify verbinden →';
-    document.getElementById('np-artist').textContent = 'Tippen zum Verbinden';
-    return;
-  }
   try {
+    const token = await _spToken();
+    if (!token) {
+      document.getElementById('np-title').textContent  = 'Spotify verbinden →';
+      document.getElementById('np-artist').textContent = 'Tippen zum Verbinden';
+      return;
+    }
     const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (res.status === 204 || res.status === 404) { npSetIdle(); return; }
-    if (res.status === 401) { localStorage.removeItem('sp_a'); return; }
+    if (res.status === 401) { localStorage.removeItem('sp_a'); npSetIdle(); return; }
     const d = await res.json();
     if (!d?.is_playing || !d.item) { npSetIdle(); return; }
 
@@ -1104,7 +1104,10 @@ async function pollNowPlaying() {
       document.getElementById('np-art').classList.add('playing');
       document.getElementById('os-art').classList.add('playing');
     }
-  } catch (_) { /* silent */ }
+  } catch (e) {
+    document.getElementById('np-title').textContent  = 'Spotify verbinden →';
+    document.getElementById('np-artist').textContent = 'Tippen zum Verbinden';
+  }
 }
 
 function startNpPolling() {
