@@ -47,6 +47,8 @@
       padding: var(--gap);
       padding-top: max(var(--gap), var(--safe-t));
       padding-bottom: max(var(--gap), var(--safe-b));
+      padding-left: max(var(--gap), env(safe-area-inset-left, 0px));
+      padding-right: max(var(--gap), env(safe-area-inset-right, 0px));
       display: grid;
       grid-template-columns: var(--sb-w) 1fr var(--rp-w);
       grid-template-rows: 1fr;
