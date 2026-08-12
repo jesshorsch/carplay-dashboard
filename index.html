@@ -982,11 +982,10 @@ document.getElementById('file-in').addEventListener('change', e => {
 });
 
 /* ═══════════════════════════════════
-   NOW PLAYING (Supabase + Last.fm Art)
+   NOW PLAYING (Last.fm polling)
 ═══════════════════════════════════ */
-const SB_URL  = 'https://nsyhxfkdbaernukjenxz.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zeWh4ZmtkYmFlcm51a2plbnh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NTM2MDEsImV4cCI6MjEwMTUyOTYwMX0.hdFL4VUZTTGpcOlICn4NK6cPjawi1NblV-nZsH3HcE8';
 const LASTFM_API_KEY  = 'bf4f954710cb7eaaa2038208abbd9cb5';
+const LASTFM_USER     = 'jesshorsch';
 const LASTFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
 
 let npTimer = null, lastNpKey = '';
@@ -1003,54 +1002,42 @@ function npSetIdle() {
   lastNpKey = '';
 }
 
-async function fetchArt(artist, title) {
-  try {
-    const r = await fetch(`https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=${LASTFM_API_KEY}&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(title)}&format=json`);
-    const d = await r.json();
-    return d?.track?.album?.image?.slice().reverse()
-      .find(i => i['#text'] && !i['#text'].includes(LASTFM_PLACEHOLDER))?.['#text'] || '';
-  } catch { return ''; }
-}
-
 async function pollNowPlaying() {
   try {
     const res = await fetch(
-      `${SB_URL}/rest/v1/now_playing?id=eq.1&select=title,artist,is_playing,updated_at`,
-      { headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` } }
+      `https://ws.audioscrobbler.com/2.0/?method=user.getRecentTracks&user=${LASTFM_USER}&api_key=${LASTFM_API_KEY}&format=json&limit=1`
     );
-    const [row] = await res.json();
-    if (!row) { npSetIdle(); return; }
+    const d = await res.json();
+    const track = d?.recenttracks?.track?.[0];
+    if (!track || track['@attr']?.nowplaying !== 'true') { npSetIdle(); return; }
 
-    const { title, artist, is_playing, updated_at } = row;
-    const ageSec = (Date.now() - new Date(updated_at)) / 1000;
+    const title  = track.name;
+    const artist = track.artist['#text'];
 
-    if (!title || ageSec > 150) { npSetIdle(); return; }
-
-    // Update text
     document.getElementById('np-title').textContent  = title;
     document.getElementById('np-artist').textContent = artist;
-    document.getElementById('np-art').classList.toggle('playing', is_playing);
+    document.getElementById('np-art').classList.add('playing');
     document.getElementById('os-title').textContent  = title;
     document.getElementById('os-artist').textContent = artist;
-    document.getElementById('os-art').classList.toggle('playing', is_playing);
+    document.getElementById('os-art').classList.add('playing');
 
-    // Fetch art only when track changes
     const key = `${artist}|${title}`;
     if (key !== lastNpKey) {
       lastNpKey = key;
-      const imgUrl = await fetchArt(artist, title);
+      const imgUrl = track.image?.slice().reverse()
+        .find(i => i['#text'] && !i['#text'].includes(LASTFM_PLACEHOLDER))?.['#text'] || '';
       const html = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
       document.getElementById('np-art').innerHTML = html;
       document.getElementById('os-art').innerHTML = html;
-      document.getElementById('np-art').classList.toggle('playing', is_playing);
-      document.getElementById('os-art').classList.toggle('playing', is_playing);
+      document.getElementById('np-art').classList.add('playing');
+      document.getElementById('os-art').classList.add('playing');
     }
   } catch (_) { /* silent */ }
 }
 
 function startNpPolling() {
   pollNowPlaying();
-  npTimer = setInterval(pollNowPlaying, 5000);
+  npTimer = setInterval(pollNowPlaying, 15000);
 }
 
 /* ═══════════════════════════════════
