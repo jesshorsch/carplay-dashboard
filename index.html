@@ -859,7 +859,7 @@ function onPos(p) {
   lastGPS = { lat, lon, heading };
 
   document.getElementById('m-speed').textContent =
-    speed != null && speed > 0.5 ? Math.round(speed * 3.6) : '—';
+    speed != null && speed > 1.4 ? Math.round(speed * 3.6) : '—';
 
   savePos(lat, lon);
   fetchWeather(lat, lon);
