@@ -46,6 +46,7 @@
       height: 100dvh;
       padding: var(--gap);
       padding-top: max(var(--gap), env(safe-area-inset-top, 0px));
+      padding-bottom: max(var(--gap), env(safe-area-inset-bottom, 0px));
       display: grid;
       grid-template-columns: var(--sb-w) 1fr var(--rp-w);
       grid-template-rows: 1fr;
@@ -64,7 +65,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 18px 0 max(18px, env(safe-area-inset-bottom, 0px));
+      padding: 18px 0 18px;
       gap: 0;
     }
 
@@ -198,7 +199,6 @@
     #right-panel {
       display: flex; flex-direction: column;
       gap: var(--gap);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     /* — NOW PLAYING card — */
