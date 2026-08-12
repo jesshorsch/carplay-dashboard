@@ -990,15 +990,34 @@ const LASTFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
 
 let lfmTimer = null;
 
+function lfmSetIdle() {
+  document.getElementById('np-title').textContent  = 'Nichts läuft';
+  document.getElementById('np-artist').textContent = '';
+  document.getElementById('np-art').innerHTML = '🎵';
+  document.getElementById('np-art').classList.remove('playing');
+  document.getElementById('os-title').textContent  = 'Kein Titel';
+  document.getElementById('os-artist').textContent = 'Unbekannter Künstler';
+  document.getElementById('os-art').innerHTML = '🎵';
+  document.getElementById('os-art').classList.remove('playing');
+}
+
 async function pollLastFm() {
   if (!LASTFM_API_KEY || !LASTFM_USER) return;
   try {
     const res  = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getRecentTracks&user=${encodeURIComponent(LASTFM_USER)}&api_key=${LASTFM_API_KEY}&format=json&limit=1`);
     const data = await res.json();
     const tracks = data?.recenttracks?.track;
-    if (!tracks) return;
+    if (!tracks) { lfmSetIdle(); return; }
+
     const track      = Array.isArray(tracks) ? tracks[0] : tracks;
     const nowPlaying = track['@attr']?.nowplaying === 'true';
+
+    // If not currently playing, check how long ago it was scrobbled
+    if (!nowPlaying) {
+      const uts = parseInt(track.date?.uts || '0');
+      const ageMinutes = (Date.now() / 1000 - uts) / 60;
+      if (ageMinutes > 10) { lfmSetIdle(); return; }
+    }
 
     const title  = track.name || '';
     const artist = track.artist?.['#text'] || '';
@@ -1024,7 +1043,7 @@ async function pollLastFm() {
 function startLfmPolling() {
   if (!LASTFM_API_KEY || !LASTFM_USER) return;
   pollLastFm();
-  lfmTimer = setInterval(pollLastFm, 10000);
+  lfmTimer = setInterval(pollLastFm, 5000);
 }
 
 /* ═══════════════════════════════════
