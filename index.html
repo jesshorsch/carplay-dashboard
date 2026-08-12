@@ -548,7 +548,7 @@
   <aside id="right-panel">
 
     <!-- Now Playing card -->
-    <div class="np-card" onclick="openOverlay()">
+    <div class="np-card" onclick="npCardClick()">
       <div class="np-art" id="np-art">🎵</div>
       <div class="np-title"  id="np-title">Not Playing</div>
       <div class="np-artist" id="np-artist"></div>
@@ -631,8 +631,8 @@
     </div>
 
     <div class="os-actions">
-      <a class="os-action-btn btn-amz" href="https://music.amazon.de" target="_blank" rel="noopener">
-        🎵 Amazon Music öffnen
+      <a class="os-action-btn btn-amz" href="https://open.spotify.com" target="_blank" rel="noopener">
+        🎵 Spotify öffnen
       </a>
       <label class="os-action-btn btn-file">
         <input type="file" id="file-in" accept="audio/*" multiple style="display:none">
@@ -982,13 +982,74 @@ document.getElementById('file-in').addEventListener('change', e => {
 });
 
 /* ═══════════════════════════════════
-   NOW PLAYING (Last.fm polling)
+   NOW PLAYING (Spotify)
 ═══════════════════════════════════ */
-const LASTFM_API_KEY  = 'bf4f954710cb7eaaa2038208abbd9cb5';
-const LASTFM_USER     = 'jesshorsch';
-const LASTFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
+const SP_CLIENT_ID    = '6b8f9d7aa7464f3d81671d943c4d6f77';
+const SP_REDIRECT_URI = 'https://jesshorsch.github.io/carplay-dashboard/';
+const SP_SCOPES       = 'user-read-currently-playing user-read-playback-state';
 
 let npTimer = null, lastNpKey = '';
+
+async function _spVerifier() {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+async function _spChallenge(v) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v));
+  return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function spLogin() {
+  const v = await _spVerifier();
+  localStorage.setItem('sp_v', v);
+  const p = new URLSearchParams({
+    client_id: SP_CLIENT_ID, response_type: 'code',
+    redirect_uri: SP_REDIRECT_URI, scope: SP_SCOPES,
+    code_challenge_method: 'S256', code_challenge: await _spChallenge(v),
+  });
+  location.href = `https://accounts.spotify.com/authorize?${p}`;
+}
+
+async function _spExchange(code) {
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: SP_CLIENT_ID, grant_type: 'authorization_code',
+      code, redirect_uri: SP_REDIRECT_URI,
+      code_verifier: localStorage.getItem('sp_v'),
+    }),
+  });
+  const d = await r.json();
+  if (d.access_token) {
+    localStorage.setItem('sp_a', d.access_token);
+    localStorage.setItem('sp_r', d.refresh_token);
+    localStorage.setItem('sp_e', Date.now() + d.expires_in * 1000);
+  }
+}
+
+async function _spRefresh() {
+  const r = localStorage.getItem('sp_r');
+  if (!r) return false;
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: SP_CLIENT_ID, grant_type: 'refresh_token', refresh_token: r }),
+  });
+  const d = await res.json();
+  if (!d.access_token) return false;
+  localStorage.setItem('sp_a', d.access_token);
+  if (d.refresh_token) localStorage.setItem('sp_r', d.refresh_token);
+  localStorage.setItem('sp_e', Date.now() + d.expires_in * 1000);
+  return true;
+}
+
+async function _spToken() {
+  if (Date.now() < (Number(localStorage.getItem('sp_e')) - 60000))
+    return localStorage.getItem('sp_a');
+  return (await _spRefresh()) ? localStorage.getItem('sp_a') : null;
+}
 
 function npSetIdle() {
   document.getElementById('np-title').textContent  = 'Nichts läuft';
@@ -1002,17 +1063,30 @@ function npSetIdle() {
   lastNpKey = '';
 }
 
-async function pollNowPlaying() {
-  try {
-    const res = await fetch(
-      `https://ws.audioscrobbler.com/2.0/?method=user.getRecentTracks&user=${LASTFM_USER}&api_key=${LASTFM_API_KEY}&format=json&limit=1`
-    );
-    const d = await res.json();
-    const track = d?.recenttracks?.track?.[0];
-    if (!track || track['@attr']?.nowplaying !== 'true') { npSetIdle(); return; }
+function npCardClick() {
+  if (!localStorage.getItem('sp_r')) spLogin();
+  else openOverlay();
+}
 
-    const title  = track.name;
-    const artist = track.artist['#text'];
+async function pollNowPlaying() {
+  const token = await _spToken();
+  if (!token) {
+    document.getElementById('np-title').textContent = 'Spotify verbinden →';
+    document.getElementById('np-artist').textContent = 'Tippen zum Verbinden';
+    return;
+  }
+  try {
+    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.status === 204 || res.status === 404) { npSetIdle(); return; }
+    if (res.status === 401) { localStorage.removeItem('sp_a'); return; }
+    const d = await res.json();
+    if (!d?.is_playing || !d.item) { npSetIdle(); return; }
+
+    const title  = d.item.name;
+    const artist = d.item.artists.map(a => a.name).join(', ');
+    const imgUrl = d.item.album.images?.[0]?.url || '';
 
     document.getElementById('np-title').textContent  = title;
     document.getElementById('np-artist').textContent = artist;
@@ -1024,8 +1098,6 @@ async function pollNowPlaying() {
     const key = `${artist}|${title}`;
     if (key !== lastNpKey) {
       lastNpKey = key;
-      const imgUrl = track.image?.slice().reverse()
-        .find(i => i['#text'] && !i['#text'].includes(LASTFM_PLACEHOLDER))?.['#text'] || '';
       const html = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
       document.getElementById('np-art').innerHTML = html;
       document.getElementById('os-art').innerHTML = html;
@@ -1037,7 +1109,7 @@ async function pollNowPlaying() {
 
 function startNpPolling() {
   pollNowPlaying();
-  npTimer = setInterval(pollNowPlaying, 15000);
+  npTimer = setInterval(pollNowPlaying, 5000);
 }
 
 /* ═══════════════════════════════════
@@ -1072,7 +1144,16 @@ updateConn();
 initMap();
 setFollowing(true);
 startGPS();
-startNpPolling();
+
+const _spCode = new URLSearchParams(location.search).get('code');
+if (_spCode) {
+  _spExchange(_spCode).then(() => {
+    history.replaceState({}, '', location.pathname);
+    startNpPolling();
+  });
+} else {
+  startNpPolling();
+}
 
 // Add CSS for GPS ring animation
 const style = document.createElement('style');
