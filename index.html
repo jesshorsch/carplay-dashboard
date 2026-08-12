@@ -288,23 +288,30 @@
     .dw-card {
       flex: 2;
       border-radius: var(--radius);
-      background: rgba(10,10,10,.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,.07);
-      padding: 18px 20px;
+      background: rgba(12, 22, 52, 0.92);
+      backdrop-filter: blur(30px) saturate(180%);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      border: 1px solid rgba(255,255,255,.11);
+      padding: 18px 20px 14px;
       display: flex; flex-direction: column; justify-content: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
     }
 
-    .dw-date { font-size: 19px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 10px; }
+    .dw-date { font-size: 20px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 14px; }
 
-    .dw-temp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-    .dw-icon { font-size: 26px; }
-    .dw-temp { font-size: 34px; font-weight: 700; letter-spacing: -1.5px; }
+    .dw-main-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
 
-    .dw-cond  { font-size: 14px; color: var(--text2); margin-bottom: 8px; }
-    .dw-loc   { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+    .dw-icon-wrap {
+      width: 58px; height: 58px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dw-icon-wrap svg { width: 100%; height: 100%; }
+
+    .dw-temp-col { display: flex; flex-direction: column; gap: 1px; }
+    .dw-temp { font-size: 44px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
+    .dw-cond { font-size: 15px; color: var(--text2); margin-top: 2px; }
+
+    .dw-loc   { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
     .dw-src   { font-size: 10px; color: var(--text3); }
 
     /* ═══════════════════════════════════
@@ -459,13 +466,14 @@
       .np-play svg { width: 17px; height: 17px; }
       .np-btn.sm svg { width: 18px; height: 18px; }
       .np-prog-bar { margin-bottom: 6px; }
-      .dw-card  { flex: 1; border-radius: 14px; padding: 10px 12px; }
-      .dw-date  { font-size: 13px; margin-bottom: 6px; }
-      .dw-temp  { font-size: 24px; }
-      .dw-icon  { font-size: 20px; }
-      .dw-cond  { font-size: 11px; margin-bottom: 4px; }
-      .dw-loc   { font-size: 10px; }
-      .dw-src   { display: none; }
+      .dw-card      { flex: 1; border-radius: 14px; padding: 10px 12px; }
+      .dw-date      { font-size: 13px; margin-bottom: 6px; }
+      .dw-main-row  { gap: 8px; margin-bottom: 4px; }
+      .dw-icon-wrap { width: 36px; height: 36px; }
+      .dw-temp      { font-size: 26px; }
+      .dw-cond      { font-size: 11px; }
+      .dw-loc       { font-size: 10px; }
+      .dw-src       { display: none; }
     }
   </style>
 </head>
@@ -557,16 +565,18 @@
     <!-- Date & Weather card -->
     <div class="dw-card">
       <div class="dw-date" id="dw-date">–</div>
-      <div class="dw-temp-row">
-        <span class="dw-icon" id="dw-icon">⏳</span>
-        <span class="dw-temp" id="dw-temp">–°</span>
+      <div class="dw-main-row">
+        <div class="dw-icon-wrap" id="dw-icon"></div>
+        <div class="dw-temp-col">
+          <span class="dw-temp" id="dw-temp">–°C</span>
+          <span class="dw-cond" id="dw-cond">Lade Wetter …</span>
+        </div>
       </div>
-      <div class="dw-cond" id="dw-cond">Lade Wetter …</div>
       <div class="dw-loc">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="rgba(255,255,255,.5)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,.55)"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
         <span id="dw-loc">–</span>
       </div>
-      <div class="dw-src">Wetterdaten via Open-Meteo</div>
+      <div class="dw-src">weather data provided by Open-Meteo</div>
     </div>
 
   </aside>
@@ -652,18 +662,79 @@ tick();
 /* ═══════════════════════════════════
    WEATHER
 ═══════════════════════════════════ */
-const WMO = {
-  0: ['☀️','Klarer Himmel'],   1:['🌤️','Überwiegend klar'],
-  2: ['⛅','Teilweise bewölkt'],3:['☁️','Bewölkt'],
-  45:['🌫️','Nebel'],           48:['🌫️','Gefrierender Nebel'],
-  51:['🌦️','Leichter Nieselregen'],53:['🌦️','Nieselregen'],55:['🌧️','Starker Nieselregen'],
-  61:['🌧️','Leichter Regen'],  63:['🌧️','Regen'],65:['🌧️','Starker Regen'],
-  71:['🌨️','Leichter Schnee'], 73:['🌨️','Schnee'],75:['❄️','Starker Schnee'],
-  77:['🌨️','Schneegriesel'],
-  80:['🌦️','Leichte Schauer'], 81:['🌧️','Schauer'],82:['⛈️','Heftige Schauer'],
-  85:['🌨️','Schneeschauer'],   86:['❄️','Starke Schneeschauer'],
-  95:['⛈️','Gewitter'],        96:['⛈️','Gewitter mit Hagel'],99:['⛈️','Schweres Gewitter'],
+const WMO_COND = {
+  0:'Klarer Himmel',    1:'Überwiegend klar',
+  2:'Teilw. bewölkt',   3:'Bewölkt',
+  45:'Nebel',           48:'Gefrierender Nebel',
+  51:'Leichter Niesel', 53:'Nieselregen',       55:'Starker Niesel',
+  61:'Leichter Regen',  63:'Regen',             65:'Starker Regen',
+  71:'Leichter Schnee', 73:'Schnee',            75:'Starker Schnee',
+  77:'Schneegriesel',
+  80:'Leichte Schauer', 81:'Schauer',           82:'Heftige Schauer',
+  85:'Schneeschauer',   86:'Starke Schneeschauer',
+  95:'Gewitter',        96:'Gewitter + Hagel',  99:'Schweres Gewitter',
 };
+
+const _sw = 3.5; // ray stroke width
+const WX_SVG = {
+  sun: `<svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="30" cy="30" r="11" fill="white"/>
+    <line x1="30" y1="3"  x2="30" y2="13" stroke="white" stroke-width="${_sw}" stroke-linecap="round"/>
+    <line x1="30" y1="47" x2="30" y2="57" stroke="white" stroke-width="${_sw}" stroke-linecap="round"/>
+    <line x1="3"  y1="30" x2="13" y2="30" stroke="white" stroke-width="${_sw}" stroke-linecap="round"/>
+    <line x1="47" y1="30" x2="57" y2="30" stroke="white" stroke-width="${_sw}" stroke-linecap="round"/>
+    <line x1="10.5" y1="10.5" x2="17.5" y2="17.5" stroke="white" stroke-width="${_sw}" stroke-linecap="round"/>
+    <line x1="42.5" y1="42.5" x2="49.5" y2="49.5" stroke="white" stroke-width="${_sw}" stroke-linecap="round"/>
+    <line x1="49.5" y1="10.5" x2="42.5" y2="17.5" stroke="white" stroke-width="${_sw}" stroke-linecap="round"/>
+    <line x1="17.5" y1="42.5" x2="10.5" y2="49.5" stroke="white" stroke-width="${_sw}" stroke-linecap="round"/>
+  </svg>`,
+  suncloud: `<svg viewBox="0 0 70 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="22" cy="20" r="9" fill="rgba(255,255,255,.85)"/>
+    <line x1="22" y1="4"  x2="22" y2="11" stroke="rgba(255,255,255,.85)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="22" y1="29" x2="22" y2="36" stroke="rgba(255,255,255,.85)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="6"  y1="20" x2="13" y2="20" stroke="rgba(255,255,255,.85)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="31" y1="20" x2="38" y2="20" stroke="rgba(255,255,255,.85)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="10.4" y1="10.4" x2="15.8" y2="15.8" stroke="rgba(255,255,255,.85)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="33.6" y1="10.4" x2="28.2" y2="15.8" stroke="rgba(255,255,255,.85)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M57 54H28C22.48 54 18 49.52 18 44C18 38.48 22.48 34 28 34C28.22 34 28.44 34 28.65 34.03C30.6 27.71 36.47 23 43.5 23C49.35 23 54.47 26.16 57.32 30.88C58.82 30.32 60.45 30 62.17 30C69.18 30 74.9 35.71 74.9 42.73C74.9 49.75 69.18 55.46 62.17 55.46" fill="white"/>
+  </svg>`,
+  partcloud: `<svg viewBox="0 0 70 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M57 44H20C13.37 44 8 38.63 8 32C8 25.37 13.37 20 20 20C20.22 20 20.44 20 20.65 20.03C22.6 13.71 28.47 9 35.5 9C41.35 9 46.47 12.16 49.32 16.88C50.82 16.32 52.45 16 54.17 16C61.18 16 66.9 21.71 66.9 28.73C66.9 35.75 61.18 41.46 54.17 41.46" fill="white"/>
+  </svg>`,
+  rain: `<svg viewBox="0 0 70 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M57 42H20C13.37 42 8 36.63 8 30C8 23.37 13.37 18 20 18C20.22 18 20.44 18 20.65 18.03C22.6 11.71 28.47 7 35.5 7C41.35 7 46.47 10.16 49.32 14.88C50.82 14.32 52.45 14 54.17 14C61.18 14 66.9 19.71 66.9 26.73C66.9 33.75 61.18 39.46 54.17 39.46" fill="white"/>
+    <line x1="22" y1="50" x2="18" y2="62" stroke="rgba(150,210,255,.9)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="35" y1="50" x2="31" y2="62" stroke="rgba(150,210,255,.9)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="48" y1="50" x2="44" y2="62" stroke="rgba(150,210,255,.9)" stroke-width="3" stroke-linecap="round"/>
+  </svg>`,
+  snow: `<svg viewBox="0 0 70 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M57 42H20C13.37 42 8 36.63 8 30C8 23.37 13.37 18 20 18C20.22 18 20.44 18 20.65 18.03C22.6 11.71 28.47 7 35.5 7C41.35 7 46.47 10.16 49.32 14.88C50.82 14.32 52.45 14 54.17 14C61.18 14 66.9 19.71 66.9 26.73C66.9 33.75 61.18 39.46 54.17 39.46" fill="white"/>
+    <circle cx="22" cy="56" r="3.5" fill="rgba(200,235,255,.9)"/>
+    <circle cx="35" cy="62" r="3.5" fill="rgba(200,235,255,.9)"/>
+    <circle cx="48" cy="56" r="3.5" fill="rgba(200,235,255,.9)"/>
+  </svg>`,
+  fog: `<svg viewBox="0 0 70 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="8"  y1="16" x2="62" y2="16" stroke="rgba(255,255,255,.65)" stroke-width="4" stroke-linecap="round"/>
+    <line x1="14" y1="28" x2="56" y2="28" stroke="rgba(255,255,255,.65)" stroke-width="4" stroke-linecap="round"/>
+    <line x1="8"  y1="40" x2="62" y2="40" stroke="rgba(255,255,255,.65)" stroke-width="4" stroke-linecap="round"/>
+  </svg>`,
+  thunder: `<svg viewBox="0 0 70 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M57 40H20C13.37 40 8 34.63 8 28C8 21.37 13.37 16 20 16C20.22 16 20.44 16 20.65 16.03C22.6 9.71 28.47 5 35.5 5C41.35 5 46.47 8.16 49.32 12.88C50.82 12.32 52.45 12 54.17 12C61.18 12 66.9 17.71 66.9 24.73C66.9 31.75 61.18 37.46 54.17 37.46" fill="white"/>
+    <path d="M38 42L28 56H37L30 68L50 50H39L46 42Z" fill="rgba(255,220,50,.95)"/>
+  </svg>`,
+};
+
+function getWxIcon(code) {
+  if (code === 0)            return WX_SVG.sun;
+  if (code <= 2)             return WX_SVG.suncloud;
+  if (code === 3)            return WX_SVG.partcloud;
+  if (code <= 48)            return WX_SVG.fog;
+  if (code <= 67)            return WX_SVG.rain;
+  if (code <= 77)            return WX_SVG.snow;
+  if (code <= 82)            return WX_SVG.rain;
+  if (code <= 86)            return WX_SVG.snow;
+  return WX_SVG.thunder;
+}
 
 let wxDone = false;
 async function fetchWeather(lat, lon) {
@@ -675,16 +746,18 @@ async function fetchWeather(lat, lon) {
     ]);
     const w = await wRes.json(), g = await gRes.json();
     const c = w.current, code = c.weather_code;
-    const [icon, cond] = WMO[code] || ['🌡️', 'Unbekannt'];
-    const city = g.address?.city || g.address?.town || g.address?.village || g.address?.county || 'Mein Standort';
+    const cond = WMO_COND[code] || 'Unbekannt';
+    const city  = g.address?.city || g.address?.town || g.address?.village || g.address?.county || '';
+    const state = g.address?.state || '';
+    const loc   = state ? `${city}, ${state}` : (city || 'Mein Standort');
 
-    document.getElementById('dw-icon').textContent = icon;
-    document.getElementById('dw-temp').textContent = `${Math.round(c.temperature_2m)}°`;
+    document.getElementById('dw-icon').innerHTML = getWxIcon(code);
+    document.getElementById('dw-temp').textContent = `${Math.round(c.temperature_2m)}°C`;
     document.getElementById('dw-cond').textContent = cond;
-    document.getElementById('dw-loc').textContent  = city;
+    document.getElementById('dw-loc').textContent  = loc;
   } catch {
     document.getElementById('dw-cond').textContent = 'Keine Verbindung';
-    document.getElementById('dw-icon').textContent = '❓';
+    document.getElementById('dw-icon').innerHTML = '';
   }
 }
 
