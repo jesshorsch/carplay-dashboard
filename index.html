@@ -429,18 +429,22 @@
       :root { --sb-w: auto; --rp-w: auto; }
       #app {
         grid-template-columns: 1fr;
-        grid-template-rows: 56px 1fr 160px;
+        grid-template-rows: auto 1fr auto;
         padding: 0; gap: 0;
       }
       #sidebar {
         flex-direction: row; border-radius: 0;
-        padding: max(10px, env(safe-area-inset-top,10px)) 16px 10px;
+        padding:
+          max(14px, env(safe-area-inset-top, 14px))
+          max(16px, env(safe-area-inset-right, 16px))
+          12px
+          max(16px, env(safe-area-inset-left, 16px));
         border: none; border-bottom: 1px solid rgba(255,255,255,.08);
         align-items: flex-end;
         box-shadow: 0 2px 12px rgba(0,0,0,.3);
       }
+      .sb-conn { display: none; }
       .sb-time { font-size: 17px; margin: 0 12px 0 0; }
-      .sb-battery { font-size: 15px; margin: 0 auto 0 0; }
       .sb-apps { flex-direction: row; gap: 12px; flex: unset; justify-content: center; }
       .app-icon { width: 40px; height: 40px; border-radius: 11px; box-shadow: none; }
       .app-icon svg { width: 22px; height: 22px; }
@@ -453,7 +457,12 @@
       #map-area { border-radius: 0; border: none; }
       #right-panel {
         flex-direction: row;
-        padding: 8px; gap: 8px;
+        padding:
+          8px
+          max(8px, env(safe-area-inset-right, 8px))
+          max(8px, env(safe-area-inset-bottom, 8px))
+          max(8px, env(safe-area-inset-left, 8px));
+        gap: 8px;
         border-top: 1px solid rgba(255,255,255,.07);
         background: rgba(0,0,0,.98);
       }
