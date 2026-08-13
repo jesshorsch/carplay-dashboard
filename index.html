@@ -1399,12 +1399,13 @@ function startNavigation(dest) {
 
 async function calcRoute(fromLat, fromLon, toLat, toLon) {
   try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson&steps=true`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson&steps=true&alternatives=3`;
     const res  = await fetch(url);
     const data = await res.json();
     if (!data.routes?.length) throw new Error('no route');
 
-    const route = data.routes[0];
+    // Always pick the route with the shortest travel time
+    const route = data.routes.reduce((best, r) => r.duration < best.duration ? r : best);
     drawRoute(route.geometry.coordinates);
 
     navSteps   = route.legs[0].steps;
