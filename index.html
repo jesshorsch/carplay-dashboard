@@ -1064,7 +1064,11 @@ function onPos(p) {
     marker.setLatLng(ll);
     circle.setLatLng(ll);
     circle.setRadius(accuracy);
-    if (following) map.setView(ll, Math.max(map.getZoom(), 15), { animate: true, duration: .6 });
+    if (navSteps.length) {
+      map.setView(ll, Math.max(map.getZoom(), 17), { animate: true, duration: .6 });
+    } else if (following) {
+      map.setView(ll, Math.max(map.getZoom(), 15), { animate: true, duration: .6 });
+    }
   }
   if (navSteps.length) updateNavDisplay(lat, lon);
 }
@@ -1388,11 +1392,8 @@ function startNavigation(dest) {
     );
   }
 
-  if (map) {
-    const pts = [[dest.lat, dest.lon]];
-    if (lastGPS) pts.push([lastGPS.lat, lastGPS.lon]);
-    map.fitBounds(L.latLngBounds(pts), { padding: [70, 70] });
-    setFollowing(false);
+  if (map && lastGPS) {
+    map.setView([lastGPS.lat, lastGPS.lon], Math.max(map.getZoom(), 17), { animate: true });
   }
 }
 
