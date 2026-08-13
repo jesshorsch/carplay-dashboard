@@ -310,6 +310,8 @@
     .dw-temp-col { display: flex; flex-direction: column; gap: 1px; }
     .dw-temp { font-size: 36px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
     .dw-cond { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .dw-uv   { display: none; margin-top: 5px; font-size: 11px; font-weight: 700;
+               letter-spacing: .2px; padding: 2px 7px; border-radius: 5px; width: fit-content; }
 
     .dw-loc   { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); margin-bottom: 2px; }
     .dw-src   { font-size: 10px; color: var(--text3); }
@@ -746,6 +748,7 @@
         <div class="dw-temp-col">
           <span class="dw-temp" id="dw-temp">–°C</span>
           <span class="dw-cond" id="dw-cond">Lade Wetter …</span>
+          <span class="dw-uv"  id="dw-uv"></span>
         </div>
       </div>
       <div class="dw-loc">
@@ -935,7 +938,7 @@ async function fetchWeather(lat, lon) {
   if (wxDone) return; wxDone = true;
   try {
     const [wRes, gRes] = await Promise.all([
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&wind_speed_unit=kmh&timezone=auto`),
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,uv_index&wind_speed_unit=kmh&timezone=auto`),
       fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de`),
     ]);
     const w = await wRes.json(), g = await gRes.json();
@@ -949,6 +952,17 @@ async function fetchWeather(lat, lon) {
     document.getElementById('dw-temp').textContent = `${Math.round(c.temperature_2m)}°C`;
     document.getElementById('dw-cond').textContent = cond;
     document.getElementById('dw-loc').textContent  = loc;
+
+    const uv = c.uv_index;
+    if (uv != null) {
+      const uvEl = document.getElementById('dw-uv');
+      const lvl  = uv < 3 ? 0 : uv < 6 ? 1 : uv < 8 ? 2 : uv < 11 ? 3 : 4;
+      const BG   = ['#34c759', '#ffd60a', '#ff9f0a', '#ff453a', '#bf5af2'];
+      uvEl.style.background = BG[lvl];
+      uvEl.style.color      = lvl === 1 ? '#000' : '#fff';
+      uvEl.textContent      = `UV ${Math.round(uv)}`;
+      uvEl.style.display    = 'inline-block';
+    }
   } catch {
     document.getElementById('dw-cond').textContent = 'Keine Verbindung';
     document.getElementById('dw-icon').innerHTML = '';
