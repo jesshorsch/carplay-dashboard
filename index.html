@@ -578,37 +578,58 @@
       color: rgba(255,255,255,.35); font-size: 14px; line-height: 1.5;
     }
 
-    /* Route info banner (on map, below top buttons) */
-    #route-banner {
+    /* Navigation bar (on map, below top buttons) */
+    #nav-bar {
       position: absolute;
       top: 74px; left: 14px; right: 14px;
       z-index: 1001;
-      background: rgba(12,12,12,.96);
+      background: rgba(8,8,8,.97);
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,.13);
-      border-radius: 18px; padding: 10px 12px;
-      display: flex; align-items: center; gap: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      display: flex; align-items: stretch; overflow: hidden;
+      min-height: 58px;
       transform: translateY(-10px); opacity: 0;
       transition: transform .3s cubic-bezier(.4,0,.2,1), opacity .3s;
       pointer-events: none;
     }
-    #route-banner.show { transform: translateY(0); opacity: 1; pointer-events: all; }
-    .rb-info { flex: 1; min-width: 0; }
-    .rb-dest {
-      font-size: 13px; font-weight: 700;
+    #nav-bar.show { transform: translateY(0); opacity: 1; pointer-events: all; }
+    .nb-arrow {
+      width: 60px; background: var(--accent);
+      display: none; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .nb-arrow.visible { display: flex; }
+    .nb-arrow svg { width: 30px; height: 30px; fill: white; }
+    .nb-content {
+      flex: 1; min-width: 0;
+      padding: 10px 14px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .nb-primary {
+      font-size: 17px; font-weight: 800; letter-spacing: -.3px; line-height: 1.1;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .rb-meta { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; }
-    .rb-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    .rb-btn {
-      height: 30px; padding: 0 11px; border-radius: 9px;
-      border: none; cursor: pointer; font-size: 12px; font-weight: 600;
-      display: flex; align-items: center; gap: 5px;
-      transition: opacity .15s; white-space: nowrap;
+    .nb-secondary {
+      font-size: 12px; color: rgba(255,255,255,.5); margin-top: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .rb-btn:active { opacity: .7; }
-    .rb-apple { background: var(--accent); color: white; }
-    .rb-close { background: rgba(255,255,255,.12); color: rgba(255,255,255,.8); padding: 0 9px; }
+    .nb-eta {
+      padding: 8px 12px;
+      display: none; flex-direction: column; align-items: flex-end; justify-content: center;
+      flex-shrink: 0; border-left: 1px solid rgba(255,255,255,.08);
+    }
+    .nb-eta.visible { display: flex; }
+    .nb-eta-time { font-size: 14px; font-weight: 700; }
+    .nb-eta-dist { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 2px; }
+    .nb-close {
+      padding: 0 14px; background: none; border: none;
+      border-left: 1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.5); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; flex-shrink: 0;
+      transition: background .12s;
+    }
+    .nb-close:active { background: rgba(255,255,255,.06); }
   </style>
 </head>
 <body>
@@ -674,19 +695,20 @@
       <div class="map-speed-unit">km/h</div>
     </div>
 
-    <!-- Route info banner -->
-    <div id="route-banner">
-      <div class="rb-info">
-        <div class="rb-dest" id="rb-dest">Ziel</div>
-        <div class="rb-meta" id="rb-meta">Route wird berechnet…</div>
+    <!-- Navigation bar -->
+    <div id="nav-bar">
+      <div class="nb-arrow" id="nb-arrow">
+        <svg viewBox="0 0 24 24" id="nb-arrow-svg"></svg>
       </div>
-      <div class="rb-actions">
-        <button class="rb-btn rb-apple" onclick="openInAppleMaps()">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-          Apple Maps
-        </button>
-        <button class="rb-btn rb-close" onclick="clearRoute()">✕</button>
+      <div class="nb-content">
+        <div class="nb-primary" id="nb-primary">Ziel</div>
+        <div class="nb-secondary" id="nb-secondary">Route wird berechnet…</div>
       </div>
+      <div class="nb-eta" id="nb-eta">
+        <div class="nb-eta-time" id="nb-eta-time">–</div>
+        <div class="nb-eta-dist" id="nb-eta-dist">–</div>
+      </div>
+      <button class="nb-close" onclick="clearRoute()">✕</button>
     </div>
   </div>
 
@@ -1044,6 +1066,7 @@ function onPos(p) {
     circle.setRadius(accuracy);
     if (following) map.setView(ll, Math.max(map.getZoom(), 15), { animate: true, duration: .6 });
   }
+  if (navSteps.length) updateNavDisplay(lat, lon);
 }
 
 function onErr(e) {
@@ -1253,6 +1276,7 @@ document.head.appendChild(style);
    ROUTE SEARCH & NAVIGATION
 ═══════════════════════════════════ */
 let routeLine = null, destMarker = null, activeDest = null;
+let navSteps = [], navStepIdx = 0;
 let _searchTimer = null, _searchResults = [];
 const RECENT_KEY = 'cardash_route_recent';
 
@@ -1348,19 +1372,19 @@ function startNavigation(dest) {
   activeDest = dest;
   closeRouteOverlay();
 
-  document.getElementById('rb-dest').textContent = dest.name;
-  document.getElementById('rb-meta').textContent  = 'Route wird berechnet…';
-  document.getElementById('route-banner').classList.add('show');
+  document.getElementById('nb-primary').textContent   = dest.name;
+  document.getElementById('nb-secondary').textContent = 'Route wird berechnet…';
+  document.getElementById('nav-bar').classList.add('show');
 
   placeDest(dest.lat, dest.lon);
 
   if (lastGPS) {
     calcRoute(lastGPS.lat, lastGPS.lon, dest.lat, dest.lon);
   } else {
-    document.getElementById('rb-meta').textContent = 'Warte auf GPS…';
+    document.getElementById('nb-secondary').textContent = 'Warte auf GPS…';
     navigator.geolocation?.getCurrentPosition(
       p => calcRoute(p.coords.latitude, p.coords.longitude, dest.lat, dest.lon),
-      () => { document.getElementById('rb-meta').textContent = 'GPS nicht verfügbar'; }
+      () => { document.getElementById('nb-secondary').textContent = 'GPS nicht verfügbar'; }
     );
   }
 
@@ -1374,7 +1398,7 @@ function startNavigation(dest) {
 
 async function calcRoute(fromLat, fromLon, toLat, toLon) {
   try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson&steps=true`;
     const res  = await fetch(url);
     const data = await res.json();
     if (!data.routes?.length) throw new Error('no route');
@@ -1382,13 +1406,18 @@ async function calcRoute(fromLat, fromLon, toLat, toLon) {
     const route = data.routes[0];
     drawRoute(route.geometry.coordinates);
 
-    const km   = (route.distance / 1000).toFixed(route.distance < 10000 ? 1 : 0);
-    const dist = route.distance < 1000 ? `${Math.round(route.distance)} m` : `${km} km`;
-    const mins = Math.round(route.duration / 60);
-    const eta  = mins < 60 ? `${mins} Min.` : `${Math.floor(mins / 60)} Std. ${mins % 60} Min.`;
-    document.getElementById('rb-meta').textContent = `${eta}  ·  ${dist}`;
+    navSteps   = route.legs[0].steps;
+    navStepIdx = 0;
+
+    if (lastGPS) {
+      updateNavDisplay(lastGPS.lat, lastGPS.lon);
+    } else {
+      const mins = Math.round(route.duration / 60);
+      const eta  = mins < 60 ? `${mins} Min.` : `${Math.floor(mins / 60)} Std. ${mins % 60} Min.`;
+      document.getElementById('nb-secondary').textContent = `${eta}  ·  ${fmtDistNav(route.distance)}`;
+    }
   } catch {
-    document.getElementById('rb-meta').textContent = 'Route nicht verfügbar';
+    document.getElementById('nb-secondary').textContent = 'Route nicht verfügbar';
   }
 }
 
@@ -1421,17 +1450,82 @@ function clearRoute() {
   if (routeLine)  { map?.removeLayer(routeLine);  routeLine  = null; }
   if (destMarker) { map?.removeLayer(destMarker); destMarker = null; }
   activeDest = null;
-  document.getElementById('route-banner').classList.remove('show');
+  navSteps = []; navStepIdx = 0;
+  document.getElementById('nav-bar').classList.remove('show');
+  document.getElementById('nb-arrow').classList.remove('visible');
+  document.getElementById('nb-eta').classList.remove('visible');
   setFollowing(true);
   if (lastGPS && map) map.setView([lastGPS.lat, lastGPS.lon], Math.max(map.getZoom(), 15), { animate: true });
 }
 
-function openInAppleMaps() {
-  if (!activeDest) return;
-  const { lat, lon } = activeDest;
-  let url = `maps://maps.apple.com/?daddr=${lat},${lon}&dirflg=d`;
-  if (lastGPS) url += `&saddr=${lastGPS.lat},${lastGPS.lon}`;
-  window.location.href = url;
+// ── Turn-by-turn helpers ──
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000, toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function fmtDistNav(m) {
+  if (m < 900) return `${Math.round(m / 10) * 10} m`;
+  return `${(m / 1000).toFixed(m < 10000 ? 1 : 0)} km`;
+}
+
+const MOD_ANGLE = {
+  'uturn': 180, 'sharp left': -135, 'left': -90, 'slight left': -40,
+  'straight': 0, 'slight right': 40, 'right': 90, 'sharp right': 135,
+};
+
+function maneuverArrowPath(type, modifier) {
+  if (type === 'arrive') {
+    return '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>';
+  }
+  if (type === 'roundabout' || type === 'rotary') {
+    return '<path d="M12 5.08V2L8 6l4 4V7c2.76 0 5 2.24 5 5 0 .87-.22 1.68-.6 2.39l1.46 1.46C18.56 14.64 19 12.88 19 12c0-3.87-3.13-7-7-7zm0 12c-2.76 0-5-2.24-5-5 0-.87.22-1.68.6-2.39L6.14 8.14C5.44 9.36 5 11.12 5 12c0 3.87 3.13 7 7 7v3l4-4-4-4v3z"/>';
+  }
+  const angle = MOD_ANGLE[modifier] ?? 0;
+  return `<g transform="rotate(${angle},12,12)"><path d="M12 3 L7 11 L10 11 L10 21 L14 21 L14 11 L17 11 Z"/></g>`;
+}
+
+function updateNavDisplay(lat, lon) {
+  if (!navSteps.length) return;
+  const isLast = navStepIdx >= navSteps.length - 1;
+
+  if (!isLast) {
+    const nextStep = navSteps[navStepIdx + 1];
+    const [nLon, nLat] = nextStep.maneuver.location;
+    const dist = haversine(lat, lon, nLat, nLon);
+    if (dist < 25) {
+      navStepIdx++;
+      updateNavDisplay(lat, lon);
+      return;
+    }
+    const arrowEl  = document.getElementById('nb-arrow');
+    const arrowSvg = document.getElementById('nb-arrow-svg');
+    const { type, modifier } = nextStep.maneuver;
+    arrowSvg.innerHTML = maneuverArrowPath(type, modifier);
+    arrowEl.style.background = '#007aff';
+    arrowEl.classList.add('visible');
+    document.getElementById('nb-primary').textContent   = fmtDistNav(dist);
+    document.getElementById('nb-secondary').textContent = navSteps[navStepIdx].name || activeDest?.name || '';
+  } else {
+    const dist = activeDest ? haversine(lat, lon, activeDest.lat, activeDest.lon) : 0;
+    const arrowEl  = document.getElementById('nb-arrow');
+    const arrowSvg = document.getElementById('nb-arrow-svg');
+    arrowSvg.innerHTML = maneuverArrowPath('arrive', '');
+    arrowEl.style.background = '#34c759';
+    arrowEl.classList.add('visible');
+    document.getElementById('nb-primary').textContent   = fmtDistNav(dist);
+    document.getElementById('nb-secondary').textContent = activeDest?.name || 'Ziel';
+  }
+
+  const remDuration = navSteps.slice(navStepIdx).reduce((s, st) => s + st.duration, 0);
+  const remDist     = navSteps.slice(navStepIdx).reduce((s, st) => s + st.distance, 0);
+  const etaDate = new Date(Date.now() + remDuration * 1000);
+  const etaStr  = etaDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('nb-eta-time').textContent = etaStr;
+  document.getElementById('nb-eta-dist').textContent = fmtDistNav(remDist);
+  document.getElementById('nb-eta').classList.add('visible');
 }
 
 // ── Recent routes ──
