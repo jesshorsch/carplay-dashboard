@@ -48,7 +48,7 @@
       padding-top: max(var(--gap), env(safe-area-inset-top, 0px));
       padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
       display: grid;
-      grid-template-columns: 1fr var(--rp-w) var(--sb-w);
+      grid-template-columns: var(--rp-w) 1fr var(--sb-w);
       grid-template-rows: 1fr;
       gap: var(--gap);
     }
@@ -546,6 +546,29 @@
 <body>
 <div id="app">
 
+  <!-- ── LEFT PANEL (Wetter + schwarzer Hintergrund oben) ── -->
+  <aside id="right-panel">
+
+    <!-- Date & Weather card -->
+    <div class="dw-card">
+      <div class="dw-date" id="dw-date">–</div>
+      <div class="dw-main-row">
+        <div class="dw-icon-wrap" id="dw-icon"></div>
+        <div class="dw-temp-col">
+          <span class="dw-temp" id="dw-temp">–°C</span>
+          <span class="dw-cond" id="dw-cond">Lade Wetter …</span>
+          <span class="dw-uv"  id="dw-uv"></span>
+        </div>
+      </div>
+      <div class="dw-loc">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,.55)"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+        <span id="dw-loc">–</span>
+      </div>
+      <div class="dw-src">weather data provided by Open-Meteo</div>
+    </div>
+
+  </aside>
+
   <!-- ── MAP ── -->
   <div id="map-area">
     <div id="leaflet-map"></div>
@@ -593,29 +616,6 @@
       <button class="nb-close" onclick="clearRoute()">✕</button>
     </div>
   </div>
-
-  <!-- ── RIGHT PANEL ── -->
-  <aside id="right-panel">
-
-    <!-- Date & Weather card -->
-    <div class="dw-card">
-      <div class="dw-date" id="dw-date">–</div>
-      <div class="dw-main-row">
-        <div class="dw-icon-wrap" id="dw-icon"></div>
-        <div class="dw-temp-col">
-          <span class="dw-temp" id="dw-temp">–°C</span>
-          <span class="dw-cond" id="dw-cond">Lade Wetter …</span>
-          <span class="dw-uv"  id="dw-uv"></span>
-        </div>
-      </div>
-      <div class="dw-loc">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,.55)"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
-        <span id="dw-loc">–</span>
-      </div>
-      <div class="dw-src">weather data provided by Open-Meteo</div>
-    </div>
-
-  </aside>
 
   <!-- ── SIDEBAR (rechts) ── -->
   <aside id="sidebar">
@@ -929,7 +929,7 @@ function toggleExpand() {
   rp.style.display = expanded ? 'none' : '';
   sb.style.display = expanded ? 'none' : '';
   document.getElementById('app').style.gridTemplateColumns = expanded
-    ? '1fr' : '1fr var(--rp-w) var(--sb-w)';
+    ? '1fr' : 'var(--rp-w) 1fr var(--sb-w)';
   if (map) setTimeout(() => map.invalidateSize(), 50);
 }
 
