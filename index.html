@@ -48,7 +48,7 @@
       padding-top: max(var(--gap), env(safe-area-inset-top, 0px));
       padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
       display: grid;
-      grid-template-columns: var(--sb-w) 1fr var(--rp-w);
+      grid-template-columns: 1fr var(--rp-w) var(--sb-w);
       grid-template-rows: 1fr;
       gap: var(--gap);
     }
@@ -104,14 +104,14 @@
     }
     .app-icon:active { transform: scale(.90); }
 
-    /* Active indicator — blue bar on left side */
+    /* Active indicator — blue bar on right side (sidebar is now on the right) */
     .app-icon.active::before {
       content: '';
       position: absolute; left: -18px; top: 50%;
       transform: translateY(-50%);
       width: 4px; height: 38px;
       background: var(--accent);
-      border-radius: 0 3px 3px 0;
+      border-radius: 3px 0 0 3px;
     }
 
     .icon-maps, .icon-music, .icon-phone { background: none; }
@@ -201,88 +201,120 @@
       gap: var(--gap);
     }
 
-    /* — NOW PLAYING card — */
+    /* — NOW PLAYING card (Apple Music CarPlay style) — */
     .np-card {
       flex: 3;
       border-radius: var(--radius);
-      background: rgba(18,18,18,.95);
+      background: rgba(18,18,18,.97);
       backdrop-filter: blur(40px) saturate(200%);
       -webkit-backdrop-filter: blur(40px) saturate(200%);
-      border: 1px solid rgba(255,255,255,.16);
-      padding: 12px 14px 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      padding: 14px 16px 12px;
       display: flex; flex-direction: column;
-      align-items: center; gap: 0;
+      justify-content: space-between;
+      gap: 10px;
       cursor: pointer;
       overflow: hidden;
       transition: opacity .15s;
-      box-shadow: 0 8px 32px rgba(0,0,0,.3);
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      position: relative;
     }
     .np-card:active { opacity: .85; }
-
-    /* Inner shine */
     .np-card::before {
       content: '';
       position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
     }
 
+    /* Top row: art + info + bars */
+    .np-top {
+      display: flex; align-items: center; gap: 12px;
+    }
     .np-art {
-      width: 64px; height: 64px; border-radius: 12px;
-      background: rgba(140,150,180,.35);
+      width: 68px; height: 68px; border-radius: 12px;
+      background: rgba(140,150,180,.3);
       display: flex; align-items: center; justify-content: center;
-      font-size: 28px;
-      flex-shrink: 0;
-      margin-bottom: 6px;
+      font-size: 28px; flex-shrink: 0;
       overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,.3);
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
     }
-    .np-art img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
-    .np-art.playing { animation: art-pulse 3s ease infinite; }
-    @keyframes art-pulse {
-      0%,100% { box-shadow: 0 4px 16px rgba(0,0,0,.3); }
-      50%      { box-shadow: 0 6px 24px rgba(10,132,255,.3), 0 4px 16px rgba(0,0,0,.2); }
+    .np-art img { width: 100%; height: 100%; object-fit: cover; }
+    .np-art.playing { box-shadow: 0 4px 20px rgba(10,132,255,.25), 0 4px 16px rgba(0,0,0,.3); }
+
+    .np-meta { flex: 1; min-width: 0; }
+    .np-title  { font-size: 15px; font-weight: 700; letter-spacing: -.3px;
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .np-artist { font-size: 12px; color: var(--text2); margin-top: 2px;
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Audio level bars */
+    .np-bars {
+      display: flex; align-items: flex-end; gap: 2.5px; height: 20px;
+      opacity: 0; transition: opacity .4s;
+      flex-shrink: 0;
     }
+    .np-bars.active { opacity: 1; }
+    .np-bars span {
+      width: 3px; border-radius: 2px;
+      background: rgba(255,255,255,.7);
+      transform-origin: bottom;
+    }
+    .np-bars span:nth-child(1) { height: 8px;  animation: nb 0.7s .00s ease-in-out infinite alternate; }
+    .np-bars span:nth-child(2) { height: 16px; animation: nb 0.7s .15s ease-in-out infinite alternate; }
+    .np-bars span:nth-child(3) { height: 10px; animation: nb 0.7s .30s ease-in-out infinite alternate; }
+    .np-bars span:nth-child(4) { height: 14px; animation: nb 0.7s .10s ease-in-out infinite alternate; }
+    @keyframes nb { from { transform: scaleY(.25); } to { transform: scaleY(1); } }
 
-    .np-title  { font-size: 15px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 1px; text-align: center; }
-    .np-artist { font-size: 12px; color: var(--text2); text-align: center; margin-bottom: 5px; }
-
-    /* Progress in card */
+    /* Progress row */
+    .np-prog-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .np-time-lbl {
+      font-size: 11px; color: var(--text2); white-space: nowrap; flex-shrink: 0;
+    }
     .np-prog-bar {
-      width: 100%; height: 3px;
+      flex: 1; height: 3px;
       background: rgba(255,255,255,.18);
-      border-radius: 2px; cursor: pointer;
-      margin-bottom: 5px; overflow: hidden;
+      border-radius: 2px; cursor: pointer; overflow: hidden;
     }
     .np-prog-fill {
       height: 100%; width: 0%;
-      background: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.85);
       border-radius: 2px;
       transition: width .4s linear;
     }
 
-    /* Controls in card */
+    /* Controls */
     .np-controls {
-      display: flex; align-items: center; justify-content: center;
-      gap: 18px; width: 100%;
+      display: flex; align-items: center;
+      justify-content: space-between; width: 100%;
+      padding: 0 4px;
     }
     .np-btn {
       background: none; border: none; color: var(--text);
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: transform .1s, opacity .15s;
     }
-    .np-btn:active { transform: scale(.85); opacity: .7; }
+    .np-btn:active { transform: scale(.82); opacity: .65; }
     .np-btn svg { fill: currentColor; }
-    .np-btn.sm svg { width: 24px; height: 24px; }
+    .np-btn.sm svg { width: 28px; height: 28px; }
 
     .np-play {
-      width: 42px; height: 42px; border-radius: 50%;
-      background: rgba(255,255,255,.18);
+      width: 46px; height: 46px; border-radius: 50%;
+      background: rgba(255,255,255,.16);
       border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: transform .12s, background .15s;
     }
-    .np-play:active { transform: scale(.90); background: rgba(255,255,255,.28); }
-    .np-play svg { width: 24px; height: 24px; fill: white; }
+    .np-play:active { transform: scale(.88); background: rgba(255,255,255,.28); }
+    .np-play svg { width: 26px; height: 26px; fill: white; }
+
+    .np-vol-btn {
+      display: flex; align-items: center; gap: 3px;
+      padding: 4px 6px; border-radius: 8px;
+      background: rgba(255,255,255,.07);
+    }
+    .np-vol-btn svg { fill: rgba(255,255,255,.55); }
 
     /* — DATE / WEATHER card — */
     .dw-card {
@@ -467,15 +499,16 @@
         border-top: 1px solid rgba(255,255,255,.07);
         background: rgba(0,0,0,.98);
       }
-      .np-card  { flex: 1; border-radius: 14px; padding: 10px 12px 8px; min-width: 0; }
-      .np-art   { width: 44px; height: 44px; border-radius: 8px; font-size: 22px; margin-bottom: 6px; }
-      .np-title  { font-size: 13px; }
-      .np-artist { font-size: 11px; margin-bottom: 6px; }
-      .np-controls { gap: 14px; }
-      .np-play  { width: 36px; height: 36px; }
-      .np-play svg { width: 17px; height: 17px; }
+      .np-card  { flex: 1; border-radius: 14px; padding: 10px 12px 8px; min-width: 0; gap: 6px; }
+      .np-art   { width: 40px; height: 40px; border-radius: 8px; font-size: 20px; }
+      .np-title  { font-size: 12px; }
+      .np-artist { font-size: 10px; }
+      .np-controls { padding: 0; }
+      .np-play  { width: 34px; height: 34px; }
+      .np-play svg { width: 16px; height: 16px; }
       .np-btn.sm svg { width: 18px; height: 18px; }
-      .np-prog-bar { margin-bottom: 6px; }
+      .np-bars  { height: 14px; }
+      .np-vol-btn { display: none; }
       .dw-card      { flex: 1; border-radius: 14px; padding: 10px 12px; }
       .dw-date      { font-size: 13px; margin-bottom: 6px; }
       .dw-main-row  { gap: 8px; margin-bottom: 4px; }
@@ -637,35 +670,6 @@
 <body>
 <div id="app">
 
-  <!-- ── SIDEBAR ── -->
-  <aside id="sidebar">
-    <div class="sb-time" id="sb-time">00:00</div>
-    <div class="sb-conn" id="sb-conn">
-      <svg viewBox="0 0 24 24" fill="white">
-        <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
-      </svg>
-      <span class="sb-conn-label" id="sb-conn-label">ONLINE</span>
-    </div>
-
-    <div class="sb-apps">
-      <button class="app-icon icon-maps active" id="icon-map" onclick="setActiveIcon('map')">
-        <svg class="full-icon" viewBox="67 212 512 512" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><clipPath id="uuid-748f7b55-9f40-4456-ae86-4374ae098999"><rect x="67" y="212" width="512" height="512" rx="112" ry="112" style="fill:none;"/></clipPath><linearGradient id="uuid-71e7bba8-a614-4dd5-9ec9-42fcdbfbb38f" x1="323" y1="726" x2="323" y2="337" gradientTransform="translate(0 938) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7fed7d"/><stop offset="1" stop-color="#2ed058"/></linearGradient><clipPath id="uuid-755d75fd-3798-4f44-9a16-2a40471d0baa"><rect x="381" y="212" width="198" height="205" style="fill:none;"/></clipPath><linearGradient id="uuid-1665803c-4795-49a3-87a3-0d96949d5da3" x1="261" y1="741" x2="261" y2="470" gradientTransform="translate(0 938) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0c91ff"/><stop offset="1" stop-color="#0077f7"/></linearGradient><linearGradient id="uuid-2c2d40d1-c4ed-4aab-909c-3de79c60f58a" x1="260" y1="538" x2="260" y2="280" gradientTransform="translate(0 938) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0c91ff"/><stop offset="1" stop-color="#017aff"/></linearGradient></defs><g style="clip-path:url(#uuid-748f7b55-9f40-4456-ae86-4374ae098999);"><rect x="326" y="601" width="253" height="123" style="fill:#fc0;"/><rect x="67" y="212" width="512" height="389" style="fill:url(#uuid-71e7bba8-a614-4dd5-9ec9-42fcdbfbb38f);"/><rect x="67" y="400" width="132" height="324" style="fill:#f082ca;"/><g style="clip-path:url(#uuid-755d75fd-3798-4f44-9a16-2a40471d0baa);"><circle cx="585.5" cy="204.5" r="161.5" style="fill:none; stroke:#fff; stroke-width:86px;"/><path d="M585.5,333.32c71.15,0,128.83-57.68,128.83-128.83s-57.68-128.82-128.83-128.82-128.83,57.68-128.83,128.82,57.68,128.83,128.83,128.83ZM585.5,399c107.42,0,194.5-87.08,194.5-194.5S692.92,10,585.5,10s-194.5,87.08-194.5,194.5,87.08,194.5,194.5,194.5Z" style="fill:#d2d1d6; fill-rule:evenodd;"/></g><path d="M338.8,205h-157v117.71c0,6.29-6.92,10.12-12.25,6.78l-100.29-62.78L0,369.76l546.85,362.66,69.26-106.05-277.32-185.96v-235.4Z" style="fill:#f2f1f6;"/><path d="M207,197h108v271h-108V197Z" style="fill:url(#uuid-1665803c-4795-49a3-87a3-0d96949d5da3);"/><path d="M185,468h153v256h-153v-256Z" style="fill:#eef0f6;"/><circle cx="260" cy="529" r="119" style="fill:url(#uuid-2c2d40d1-c4ed-4aab-909c-3de79c60f58a); stroke:#fff; stroke-width:20px;"/><path d="M272.22,458.17c-4.15-10.9-20.29-10.9-24.44,0l-45.84,125.2c-2.92,7.97,6.96,14.4,13.07,8.51l42.21-40.71c1.55-1.49,4-1.49,5.55,0l42.21,40.71c6.11,5.89,15.98-.54,13.07-8.51l-45.84-125.2Z" style="fill:#fff;"/></g></svg>
-      </button>
-      <button class="app-icon icon-music" id="icon-music" onclick="setActiveIcon('music'); openOverlay()">
-        <svg class="full-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill-rule="evenodd" clip-rule="evenodd" baseProfile="basic"><path fill="#3cd0d9" fill-rule="evenodd" d="M42,15c0-4.967-4.033-9-9-9H15c-4.967,0-9,4.033-9,9v18c0,4.967,4.033,9,9,9h18c4.967,0,9-4.033,9-9V15z" clip-rule="evenodd"/><path fill="#fff" d="M35.982,28c-0.936,0-2.048,0.233-2.867,0.817c-0.234,0.175-0.234,0.408,0.059,0.408c0.936-0.117,3.043-0.408,3.452,0.117c0.351,0.467-0.41,2.451-0.761,3.384c-0.117,0.292,0.117,0.35,0.351,0.175c1.58-1.342,1.989-4.085,1.697-4.435C37.737,28.175,36.918,28,35.982,28z"/><path fill="#fff" d="M10.15,28.8c1.81,1.133,3.64,2.215,5.561,3.032c1.914,0.815,3.922,1.398,5.94,1.406c2.055,0.055,4.142-0.227,6.167-0.688c2.032-0.468,4.012-1.173,5.957-1.998c0.254-0.109,0.549,0.01,0.657,0.264c0.1,0.235,0.006,0.505-0.21,0.631c-1.887,1.089-3.928,1.933-6.054,2.505c-2.132,0.572-4.334,0.822-6.563,0.786c-2.276-0.119-4.455-0.812-6.405-1.821c-1.955-1.014-3.73-2.29-5.351-3.717c-0.104-0.092-0.114-0.25-0.023-0.354C9.91,28.753,10.048,28.736,10.15,28.8z"/><path fill="#fff" d="M22.5,26h-0.404C20.94,26,20,25.06,20,23.904V20h1v3.904C21,24.508,21.492,25,22.096,25H22.5c0.603,0,1.5-0.897,1.5-1.5v-1h1v1C25,24.668,23.668,26,22.5,26z"/><rect width="1" height="6" x="11" y="20" fill="#fff" fill-rule="evenodd" clip-rule="evenodd"/><path fill="#fff" d="M11.391,22.21c-0.021-0.487,0.147-0.891,0.372-1.257c0.117-0.183,0.246-0.358,0.428-0.523c0.202-0.171,0.434-0.283,0.672-0.359c0.984-0.292,2.011,0.305,2.438,1.196c0.223,0.451,0.202,0.994,0.199,1.324V26h-1v-3.409c0.002-0.421,0.008-0.664-0.108-0.906c-0.209-0.498-0.826-0.719-1.335-0.704c-0.446-0.019-1.043,0.69-1.167,1.229H11.391z"/><path fill="#fff" d="M14.75,22.21c-0.021-0.487,0.147-0.891,0.372-1.257c0.117-0.183,0.246-0.358,0.428-0.523c0.202-0.171,0.434-0.283,0.672-0.359c0.984-0.292,2.011,0.305,2.438,1.196c0.223,0.451,0.202,0.994,0.199,1.324V26h-1v-3.409c0.002-0.421,0.008-0.664-0.108-0.906c-0.209-0.498-0.826-0.719-1.335-0.704c-0.446-0.019-1.043,0.69-1.167,1.229H14.75z"/><rect width="1" height="6" x="24" y="20" fill="#fff" fill-rule="evenodd" clip-rule="evenodd"/><rect width="1" height="6" x="31" y="20" fill="#fff" fill-rule="evenodd" clip-rule="evenodd"/><circle cx="31.5" cy="18" r="1" fill="#fff" fill-rule="evenodd" clip-rule="evenodd"/><path fill="#fff" d="M34,22.62v0.76c0,0.89,0.73,1.62,1.62,1.62c0.43,0,0.84-0.17,1.15-0.47L37,24.3v1.3c-0.41,0.26-0.88,0.4-1.38,0.4C34.18,26,33,24.82,33,23.38v-0.76c0-1.44,1.18-2.62,2.62-2.62c0.5,0,0.97,0.14,1.38,0.4v1.3l-0.23-0.23c-0.31-0.3-0.72-0.47-1.15-0.47C34.73,21,34,21.73,34,22.62z"/><path fill="#fff" d="M27.245,20.955C27.145,21.025,27,21.23,27,21.5c0,0.58,0.32,0.75,1.16,1.03C28.94,22.78,30,23.14,30,24.5c0,0.52-0.2,0.95-0.59,1.25c-0.49,0.38-1.23,0.5-1.94,0.5c-0.54,0-1.08-0.07-1.47-0.14v-1.02c0.94,0.19,2.28,0.28,2.79-0.13c0.1-0.07,0.21-0.19,0.21-0.46c0-0.58-0.32-0.75-1.16-1.03C27.06,23.22,26,22.86,26,21.5c0-0.52,0.2-0.95,0.59-1.25c0.87-0.68,2.307-0.499,3.193-0.164v1.02C28.857,20.572,27.755,20.545,27.245,20.955z"/></svg>
-      </button>
-      <button class="app-icon icon-phone" id="icon-phone" onclick="setActiveIcon('phone')">
-        <svg class="full-icon" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M91.4062 0C108.75 0 120 11.25 120 28.5938V91.4062C120 108.75 108.75 120 91.4062 120H28.5938C11.25 120 0 108.75 0 91.4062V28.5938C0 11.25 11.25 0 28.5938 0H91.4062Z" fill="url(#phn-grad)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M27.1753 52.0986C22.7044 43.9929 21 37.4583 21 33.0447C21 28.631 22.0844 27.3651 23.1848 26.3425C24.2851 25.3198 29.247 22.2607 30.0924 21.6901C30.9379 21.1196 34.1646 20.0109 36.1881 22.9217C38.2116 25.8326 42.0221 31.677 44.6492 35.5595C48.7717 41.0588 45.4874 43.4729 44.4266 44.9198C42.4745 47.5823 41.3505 48.239 41.3505 51.5084C41.3505 54.7778 50.4875 64.0662 52.6722 66.3547C54.8404 68.6259 63.9446 76.607 66.7657 77.0338C69.6066 77.4636 73.4098 74.4559 74.2184 73.6932C78.3319 70.535 80.6539 72.9294 82.5487 73.9701C84.4434 75.0109 93.0043 80.3454 95.6573 82.1436C98.1541 83.9417 97.9981 86.7207 97.9981 86.7207C97.9981 86.7207 92.8483 94.8941 92.2241 95.8749C91.4438 97.0192 89.5711 98 85.3577 98C81.1442 98 76.6423 97.2304 65.9433 91.3464C57.189 86.5319 48.8437 78.9927 44.4742 74.579C39.9486 70.1654 32.2823 61.3575 27.1753 52.0986Z" fill="white"/><defs><linearGradient id="phn-grad" x1="0" y1="0" x2="0" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#64FA7E"/><stop offset="1" stop-color="#0CBA29"/></linearGradient></defs></svg>
-      </button>
-    </div>
-
-    <button class="sb-grid">
-      <span></span><span></span><span></span>
-      <span></span><span></span><span></span>
-      <span></span><span></span><span></span>
-    </button>
-  </aside>
-
   <!-- ── MAP ── -->
   <div id="map-area">
     <div id="leaflet-map"></div>
@@ -717,14 +721,25 @@
   <!-- ── RIGHT PANEL ── -->
   <aside id="right-panel">
 
-    <!-- Now Playing card -->
+    <!-- Now Playing card (Apple Music CarPlay style) -->
     <div class="np-card" onclick="npCardClick()">
-      <div class="np-art" id="np-art">🎵</div>
-      <div class="np-title"  id="np-title">Not Playing</div>
-      <div class="np-artist" id="np-artist"></div>
+      <div class="np-top">
+        <div class="np-art" id="np-art">🎵</div>
+        <div class="np-meta">
+          <div class="np-title"  id="np-title">Nichts läuft</div>
+          <div class="np-artist" id="np-artist"></div>
+        </div>
+        <div class="np-bars" id="np-bars">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </div>
 
-      <div class="np-prog-bar" id="np-prog">
-        <div class="np-prog-fill" id="np-fill"></div>
+      <div class="np-prog-row">
+        <span class="np-time-lbl" id="np-t-cur">—</span>
+        <div class="np-prog-bar" id="np-prog" onclick="event.stopPropagation()">
+          <div class="np-prog-fill" id="np-fill"></div>
+        </div>
+        <span class="np-time-lbl" id="np-t-rem">—</span>
       </div>
 
       <div class="np-controls">
@@ -736,6 +751,14 @@
         </button>
         <button class="np-btn sm" onclick="event.stopPropagation(); nextTrack()">
           <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+        <button class="np-btn np-vol-btn" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+          </svg>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="rgba(90,160,255,.9)">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+          </svg>
         </button>
       </div>
     </div>
@@ -758,6 +781,35 @@
       <div class="dw-src">weather data provided by Open-Meteo</div>
     </div>
 
+  </aside>
+
+  <!-- ── SIDEBAR (rechts) ── -->
+  <aside id="sidebar">
+    <div class="sb-time" id="sb-time">00:00</div>
+    <div class="sb-conn" id="sb-conn">
+      <svg viewBox="0 0 24 24" fill="white">
+        <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+      </svg>
+      <span class="sb-conn-label" id="sb-conn-label">ONLINE</span>
+    </div>
+
+    <div class="sb-apps">
+      <button class="app-icon icon-maps active" id="icon-map" onclick="setActiveIcon('map')">
+        <svg class="full-icon" viewBox="67 212 512 512" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><clipPath id="uuid-748f7b55-9f40-4456-ae86-4374ae098999"><rect x="67" y="212" width="512" height="512" rx="112" ry="112" style="fill:none;"/></clipPath><linearGradient id="uuid-71e7bba8-a614-4dd5-9ec9-42fcdbfbb38f" x1="323" y1="726" x2="323" y2="337" gradientTransform="translate(0 938) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7fed7d"/><stop offset="1" stop-color="#2ed058"/></linearGradient><clipPath id="uuid-755d75fd-3798-4f44-9a16-2a40471d0baa"><rect x="381" y="212" width="198" height="205" style="fill:none;"/></clipPath><linearGradient id="uuid-1665803c-4795-49a3-87a3-0d96949d5da3" x1="261" y1="741" x2="261" y2="470" gradientTransform="translate(0 938) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0c91ff"/><stop offset="1" stop-color="#0077f7"/></linearGradient><linearGradient id="uuid-2c2d40d1-c4ed-4aab-909c-3de79c60f58a" x1="260" y1="538" x2="260" y2="280" gradientTransform="translate(0 938) scale(1 -1)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0c91ff"/><stop offset="1" stop-color="#017aff"/></linearGradient></defs><g style="clip-path:url(#uuid-748f7b55-9f40-4456-ae86-4374ae098999);"><rect x="326" y="601" width="253" height="123" style="fill:#fc0;"/><rect x="67" y="212" width="512" height="389" style="fill:url(#uuid-71e7bba8-a614-4dd5-9ec9-42fcdbfbb38f);"/><rect x="67" y="400" width="132" height="324" style="fill:#f082ca;"/><g style="clip-path:url(#uuid-755d75fd-3798-4f44-9a16-2a40471d0baa);"><circle cx="585.5" cy="204.5" r="161.5" style="fill:none; stroke:#fff; stroke-width:86px;"/><path d="M585.5,333.32c71.15,0,128.83-57.68,128.83-128.83s-57.68-128.82-128.83-128.82-128.83,57.68-128.83,128.82,57.68,128.83,128.83,128.83ZM585.5,399c107.42,0,194.5-87.08,194.5-194.5S692.92,10,585.5,10s-194.5,87.08-194.5,194.5,87.08,194.5,194.5,194.5Z" style="fill:#d2d1d6; fill-rule:evenodd;"/></g><path d="M338.8,205h-157v117.71c0,6.29-6.92,10.12-12.25,6.78l-100.29-62.78L0,369.76l546.85,362.66,69.26-106.05-277.32-185.96v-235.4Z" style="fill:#f2f1f6;"/><path d="M207,197h108v271h-108V197Z" style="fill:url(#uuid-1665803c-4795-49a3-87a3-0d96949d5da3);"/><path d="M185,468h153v256h-153v-256Z" style="fill:#eef0f6;"/><circle cx="260" cy="529" r="119" style="fill:url(#uuid-2c2d40d1-c4ed-4aab-909c-3de79c60f58a); stroke:#fff; stroke-width:20px;"/><path d="M272.22,458.17c-4.15-10.9-20.29-10.9-24.44,0l-45.84,125.2c-2.92,7.97,6.96,14.4,13.07,8.51l42.21-40.71c1.55-1.49,4-1.49,5.55,0l42.21,40.71c6.11,5.89,15.98-.54,13.07-8.51l-45.84-125.2Z" style="fill:#fff;"/></g></svg>
+      </button>
+      <button class="app-icon icon-music" id="icon-music" onclick="setActiveIcon('music'); openOverlay()">
+        <svg class="full-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill-rule="evenodd" clip-rule="evenodd" baseProfile="basic"><path fill="#3cd0d9" fill-rule="evenodd" d="M42,15c0-4.967-4.033-9-9-9H15c-4.967,0-9,4.033-9,9v18c0,4.967,4.033,9,9,9h18c4.967,0,9-4.033,9-9V15z" clip-rule="evenodd"/><path fill="#fff" d="M35.982,28c-0.936,0-2.048,0.233-2.867,0.817c-0.234,0.175-0.234,0.408,0.059,0.408c0.936-0.117,3.043-0.408,3.452,0.117c0.351,0.467-0.41,2.451-0.761,3.384c-0.117,0.292,0.117,0.35,0.351,0.175c1.58-1.342,1.989-4.085,1.697-4.435C37.737,28.175,36.918,28,35.982,28z"/><path fill="#fff" d="M10.15,28.8c1.81,1.133,3.64,2.215,5.561,3.032c1.914,0.815,3.922,1.398,5.94,1.406c2.055,0.055,4.142-0.227,6.167-0.688c2.032-0.468,4.012-1.173,5.957-1.998c0.254-0.109,0.549,0.01,0.657,0.264c0.1,0.235,0.006,0.505-0.21,0.631c-1.887,1.089-3.928,1.933-6.054,2.505c-2.132,0.572-4.334,0.822-6.563,0.786c-2.276-0.119-4.455-0.812-6.405-1.821c-1.955-1.014-3.73-2.29-5.351-3.717c-0.104-0.092-0.114-0.25-0.023-0.354C9.91,28.753,10.048,28.736,10.15,28.8z"/><path fill="#fff" d="M22.5,26h-0.404C20.94,26,20,25.06,20,23.904V20h1v3.904C21,24.508,21.492,25,22.096,25H22.5c0.603,0,1.5-0.897,1.5-1.5v-1h1v1C25,24.668,23.668,26,22.5,26z"/><rect width="1" height="6" x="11" y="20" fill="#fff" fill-rule="evenodd" clip-rule="evenodd"/><path fill="#fff" d="M11.391,22.21c-0.021-0.487,0.147-0.891,0.372-1.257c0.117-0.183,0.246-0.358,0.428-0.523c0.202-0.171,0.434-0.283,0.672-0.359c0.984-0.292,2.011,0.305,2.438,1.196c0.223,0.451,0.202,0.994,0.199,1.324V26h-1v-3.409c0.002-0.421,0.008-0.664-0.108-0.906c-0.209-0.498-0.826-0.719-1.335-0.704c-0.446-0.019-1.043,0.69-1.167,1.229H11.391z"/><path fill="#fff" d="M14.75,22.21c-0.021-0.487,0.147-0.891,0.372-1.257c0.117-0.183,0.246-0.358,0.428-0.523c0.202-0.171,0.434-0.283,0.672-0.359c0.984-0.292,2.011,0.305,2.438,1.196c0.223,0.451,0.202,0.994,0.199,1.324V26h-1v-3.409c0.002-0.421,0.008-0.664-0.108-0.906c-0.209-0.498-0.826-0.719-1.335-0.704c-0.446-0.019-1.043,0.69-1.167,1.229H14.75z"/><rect width="1" height="6" x="24" y="20" fill="#fff" fill-rule="evenodd" clip-rule="evenodd"/><rect width="1" height="6" x="31" y="20" fill="#fff" fill-rule="evenodd" clip-rule="evenodd"/><circle cx="31.5" cy="18" r="1" fill="#fff" fill-rule="evenodd" clip-rule="evenodd"/><path fill="#fff" d="M34,22.62v0.76c0,0.89,0.73,1.62,1.62,1.62c0.43,0,0.84-0.17,1.15-0.47L37,24.3v1.3c-0.41,0.26-0.88,0.4-1.38,0.4C34.18,26,33,24.82,33,23.38v-0.76c0-1.44,1.18-2.62,2.62-2.62c0.5,0,0.97,0.14,1.38,0.4v1.3l-0.23-0.23c-0.31-0.3-0.72-0.47-1.15-0.47C34.73,21,34,21.73,34,22.62z"/><path fill="#fff" d="M27.245,20.955C27.145,21.025,27,21.23,27,21.5c0,0.58,0.32,0.75,1.16,1.03C28.94,22.78,30,23.14,30,24.5c0,0.52-0.2,0.95-0.59,1.25c-0.49,0.38-1.23,0.5-1.94,0.5c-0.54,0-1.08-0.07-1.47-0.14v-1.02c0.94,0.19,2.28,0.28,2.79-0.13c0.1-0.07,0.21-0.19,0.21-0.46c0-0.58-0.32-0.75-1.16-1.03C27.06,23.22,26,22.86,26,21.5c0-0.52,0.2-0.95,0.59-1.25c0.87-0.68,2.307-0.499,3.193-0.164v1.02C28.857,20.572,27.755,20.545,27.245,20.955z"/></svg>
+      </button>
+      <button class="app-icon icon-phone" id="icon-phone" onclick="setActiveIcon('phone')">
+        <svg class="full-icon" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M91.4062 0C108.75 0 120 11.25 120 28.5938V91.4062C120 108.75 108.75 120 91.4062 120H28.5938C11.25 120 0 108.75 0 91.4062V28.5938C0 11.25 11.25 0 28.5938 0H91.4062Z" fill="url(#phn-grad)"/><path fill-rule="evenodd" clip-rule="evenodd" d="M27.1753 52.0986C22.7044 43.9929 21 37.4583 21 33.0447C21 28.631 22.0844 27.3651 23.1848 26.3425C24.2851 25.3198 29.247 22.2607 30.0924 21.6901C30.9379 21.1196 34.1646 20.0109 36.1881 22.9217C38.2116 25.8326 42.0221 31.677 44.6492 35.5595C48.7717 41.0588 45.4874 43.4729 44.4266 44.9198C42.4745 47.5823 41.3505 48.239 41.3505 51.5084C41.3505 54.7778 50.4875 64.0662 52.6722 66.3547C54.8404 68.6259 63.9446 76.607 66.7657 77.0338C69.6066 77.4636 73.4098 74.4559 74.2184 73.6932C78.3319 70.535 80.6539 72.9294 82.5487 73.9701C84.4434 75.0109 93.0043 80.3454 95.6573 82.1436C98.1541 83.9417 97.9981 86.7207 97.9981 86.7207C97.9981 86.7207 92.8483 94.8941 92.2241 95.8749C91.4438 97.0192 89.5711 98 85.3577 98C81.1442 98 76.6423 97.2304 65.9433 91.3464C57.189 86.5319 48.8437 78.9927 44.4742 74.579C39.9486 70.1654 32.2823 61.3575 27.1753 52.0986Z" fill="white"/><defs><linearGradient id="phn-grad" x1="0" y1="0" x2="0" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#64FA7E"/><stop offset="1" stop-color="#0CBA29"/></linearGradient></defs></svg>
+      </button>
+    </div>
+
+    <button class="sb-grid">
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+    </button>
   </aside>
 </div>
 
@@ -1043,7 +1095,7 @@ function toggleExpand() {
   rp.style.display = expanded ? 'none' : '';
   sb.style.display = expanded ? 'none' : '';
   document.getElementById('app').style.gridTemplateColumns = expanded
-    ? '1fr' : 'var(--sb-w) 1fr var(--rp-w)';
+    ? '1fr' : '1fr var(--rp-w) var(--sb-w)';
   if (map) setTimeout(() => map.invalidateSize(), 50);
 }
 
@@ -1120,6 +1172,7 @@ function syncUI(playing) {
   document.getElementById('os-play-icon').innerHTML = svg;
   document.getElementById('np-art').classList.toggle('playing', playing);
   document.getElementById('os-art').classList.toggle('playing', playing);
+  document.getElementById('np-bars')?.classList.toggle('active', playing);
 }
 
 function loadTrack(i) {
@@ -1157,6 +1210,9 @@ audio.addEventListener('timeupdate', () => {
   document.getElementById('os-fill').style.width   = `${pct}%`;
   document.getElementById('os-t-cur').textContent  = fmtTime(audio.currentTime);
   document.getElementById('os-t-tot').textContent  = fmtTime(audio.duration);
+  const rem = audio.duration - audio.currentTime;
+  document.getElementById('np-t-cur').textContent  = fmtTime(audio.currentTime);
+  document.getElementById('np-t-rem').textContent  = `-${fmtTime(rem)}`;
 });
 
 audio.addEventListener('ended', nextTrack);
@@ -1200,6 +1256,9 @@ function npSetIdle() {
   document.getElementById('np-artist').textContent = '';
   document.getElementById('np-art').innerHTML = '🎵';
   document.getElementById('np-art').classList.remove('playing');
+  document.getElementById('np-bars')?.classList.remove('active');
+  document.getElementById('np-t-cur').textContent = '—';
+  document.getElementById('np-t-rem').textContent = '—';
   document.getElementById('os-title').textContent  = 'Kein Titel';
   document.getElementById('os-artist').textContent = 'Unbekannter Künstler';
   document.getElementById('os-art').innerHTML = '🎵';
@@ -1227,6 +1286,7 @@ async function pollNowPlaying() {
     document.getElementById('np-title').textContent  = title;
     document.getElementById('np-artist').textContent = artist;
     document.getElementById('np-art').classList.add('playing');
+    document.getElementById('np-bars')?.classList.toggle('active', isNowPlaying);
     document.getElementById('os-title').textContent  = title;
     document.getElementById('os-artist').textContent = artist;
     document.getElementById('os-art').classList.add('playing');
