@@ -199,126 +199,12 @@
     #right-panel {
       display: flex; flex-direction: column;
       gap: var(--gap);
+      justify-content: flex-end;
     }
-
-    /* — NOW PLAYING card (Apple Music CarPlay style) — */
-    .np-card {
-      flex: 3;
-      border-radius: var(--radius);
-      background: rgba(18,18,18,.97);
-      backdrop-filter: blur(40px) saturate(200%);
-      -webkit-backdrop-filter: blur(40px) saturate(200%);
-      border: 1px solid rgba(255,255,255,.14);
-      padding: 14px 16px 12px;
-      display: flex; flex-direction: column;
-      justify-content: space-between;
-      gap: 10px;
-      cursor: pointer;
-      overflow: hidden;
-      transition: opacity .15s;
-      box-shadow: 0 8px 32px rgba(0,0,0,.4);
-      position: relative;
-    }
-    .np-card:active { opacity: .85; }
-    .np-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
-    }
-
-    /* Top row: art + info + bars */
-    .np-top {
-      display: flex; align-items: center; gap: 12px;
-    }
-    .np-art {
-      width: 68px; height: 68px; border-radius: 12px;
-      background: rgba(140,150,180,.3);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px; flex-shrink: 0;
-      overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,.4);
-    }
-    .np-art img { width: 100%; height: 100%; object-fit: cover; }
-    .np-art.playing { box-shadow: 0 4px 20px rgba(10,132,255,.25), 0 4px 16px rgba(0,0,0,.3); }
-
-    .np-meta { flex: 1; min-width: 0; }
-    .np-title  { font-size: 15px; font-weight: 700; letter-spacing: -.3px;
-                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .np-artist { font-size: 12px; color: var(--text2); margin-top: 2px;
-                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    /* Audio level bars */
-    .np-bars {
-      display: flex; align-items: flex-end; gap: 2.5px; height: 20px;
-      opacity: 0; transition: opacity .4s;
-      flex-shrink: 0;
-    }
-    .np-bars.active { opacity: 1; }
-    .np-bars span {
-      width: 3px; border-radius: 2px;
-      background: rgba(255,255,255,.7);
-      transform-origin: bottom;
-    }
-    .np-bars span:nth-child(1) { height: 8px;  animation: nb 0.7s .00s ease-in-out infinite alternate; }
-    .np-bars span:nth-child(2) { height: 16px; animation: nb 0.7s .15s ease-in-out infinite alternate; }
-    .np-bars span:nth-child(3) { height: 10px; animation: nb 0.7s .30s ease-in-out infinite alternate; }
-    .np-bars span:nth-child(4) { height: 14px; animation: nb 0.7s .10s ease-in-out infinite alternate; }
-    @keyframes nb { from { transform: scaleY(.25); } to { transform: scaleY(1); } }
-
-    /* Progress row */
-    .np-prog-row {
-      display: flex; align-items: center; gap: 8px;
-    }
-    .np-time-lbl {
-      font-size: 11px; color: var(--text2); white-space: nowrap; flex-shrink: 0;
-    }
-    .np-prog-bar {
-      flex: 1; height: 3px;
-      background: rgba(255,255,255,.18);
-      border-radius: 2px; cursor: pointer; overflow: hidden;
-    }
-    .np-prog-fill {
-      height: 100%; width: 0%;
-      background: rgba(255,255,255,.85);
-      border-radius: 2px;
-      transition: width .4s linear;
-    }
-
-    /* Controls */
-    .np-controls {
-      display: flex; align-items: center;
-      justify-content: space-between; width: 100%;
-      padding: 0 4px;
-    }
-    .np-btn {
-      background: none; border: none; color: var(--text);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: transform .1s, opacity .15s;
-    }
-    .np-btn:active { transform: scale(.82); opacity: .65; }
-    .np-btn svg { fill: currentColor; }
-    .np-btn.sm svg { width: 28px; height: 28px; }
-
-    .np-play {
-      width: 46px; height: 46px; border-radius: 50%;
-      background: rgba(255,255,255,.16);
-      border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform .12s, background .15s;
-    }
-    .np-play:active { transform: scale(.88); background: rgba(255,255,255,.28); }
-    .np-play svg { width: 26px; height: 26px; fill: white; }
-
-    .np-vol-btn {
-      display: flex; align-items: center; gap: 3px;
-      padding: 4px 6px; border-radius: 8px;
-      background: rgba(255,255,255,.07);
-    }
-    .np-vol-btn svg { fill: rgba(255,255,255,.55); }
 
     /* — DATE / WEATHER card — */
     .dw-card {
-      flex: 2;
+      flex: 0 0 auto;
       border-radius: var(--radius);
       background: rgba(10,10,10,.95);
       backdrop-filter: blur(30px) saturate(180%);
@@ -499,16 +385,6 @@
         border-top: 1px solid rgba(255,255,255,.07);
         background: rgba(0,0,0,.98);
       }
-      .np-card  { flex: 1; border-radius: 14px; padding: 10px 12px 8px; min-width: 0; gap: 6px; }
-      .np-art   { width: 40px; height: 40px; border-radius: 8px; font-size: 20px; }
-      .np-title  { font-size: 12px; }
-      .np-artist { font-size: 10px; }
-      .np-controls { padding: 0; }
-      .np-play  { width: 34px; height: 34px; }
-      .np-play svg { width: 16px; height: 16px; }
-      .np-btn.sm svg { width: 18px; height: 18px; }
-      .np-bars  { height: 14px; }
-      .np-vol-btn { display: none; }
       .dw-card      { flex: 1; border-radius: 14px; padding: 10px 12px; }
       .dw-date      { font-size: 13px; margin-bottom: 6px; }
       .dw-main-row  { gap: 8px; margin-bottom: 4px; }
@@ -720,48 +596,6 @@
 
   <!-- ── RIGHT PANEL ── -->
   <aside id="right-panel">
-
-    <!-- Now Playing card (Apple Music CarPlay style) -->
-    <div class="np-card" onclick="npCardClick()">
-      <div class="np-top">
-        <div class="np-art" id="np-art">🎵</div>
-        <div class="np-meta">
-          <div class="np-title"  id="np-title">Nichts läuft</div>
-          <div class="np-artist" id="np-artist"></div>
-        </div>
-        <div class="np-bars" id="np-bars">
-          <span></span><span></span><span></span><span></span>
-        </div>
-      </div>
-
-      <div class="np-prog-row">
-        <span class="np-time-lbl" id="np-t-cur">—</span>
-        <div class="np-prog-bar" id="np-prog" onclick="event.stopPropagation()">
-          <div class="np-prog-fill" id="np-fill"></div>
-        </div>
-        <span class="np-time-lbl" id="np-t-rem">—</span>
-      </div>
-
-      <div class="np-controls">
-        <button class="np-btn sm" onclick="event.stopPropagation(); prevTrack()">
-          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-        </button>
-        <button class="np-play" id="np-play" onclick="event.stopPropagation(); togglePlay()">
-          <svg viewBox="0 0 24 24" id="np-play-icon"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-        <button class="np-btn sm" onclick="event.stopPropagation(); nextTrack()">
-          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-        </button>
-        <button class="np-btn np-vol-btn" onclick="event.stopPropagation()">
-          <svg viewBox="0 0 24 24" width="18" height="18">
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-          </svg>
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="rgba(90,160,255,.9)">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
 
     <!-- Date & Weather card -->
     <div class="dw-card">
@@ -1168,21 +1002,15 @@ function syncUI(playing) {
   const pause = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
   const play  = '<path d="M8 5v14l11-7z"/>';
   const svg   = playing ? pause : play;
-  document.getElementById('np-play-icon').innerHTML = svg;
   document.getElementById('os-play-icon').innerHTML = svg;
-  document.getElementById('np-art').classList.toggle('playing', playing);
   document.getElementById('os-art').classList.toggle('playing', playing);
-  document.getElementById('np-bars')?.classList.toggle('active', playing);
 }
 
 function loadTrack(i) {
   const t = playlist[i];
   audio.src = t.url;
-  const name = t.name, artist = t.artist || '';
-  document.getElementById('np-title').textContent  = name;
-  document.getElementById('os-title').textContent  = name;
-  document.getElementById('np-artist').textContent = artist;
-  document.getElementById('os-artist').textContent = artist;
+  document.getElementById('os-title').textContent  = t.name;
+  document.getElementById('os-artist').textContent = t.artist || '';
   audio.play().then(()=>syncUI(true)).catch(()=>{});
 }
 
@@ -1206,13 +1034,9 @@ function nextTrack() {
 audio.addEventListener('timeupdate', () => {
   if (!audio.duration) return;
   const pct = (audio.currentTime / audio.duration) * 100;
-  document.getElementById('np-fill').style.width   = `${pct}%`;
-  document.getElementById('os-fill').style.width   = `${pct}%`;
-  document.getElementById('os-t-cur').textContent  = fmtTime(audio.currentTime);
-  document.getElementById('os-t-tot').textContent  = fmtTime(audio.duration);
-  const rem = audio.duration - audio.currentTime;
-  document.getElementById('np-t-cur').textContent  = fmtTime(audio.currentTime);
-  document.getElementById('np-t-rem').textContent  = `-${fmtTime(rem)}`;
+  document.getElementById('os-fill').style.width  = `${pct}%`;
+  document.getElementById('os-t-cur').textContent = fmtTime(audio.currentTime);
+  document.getElementById('os-t-tot').textContent = fmtTime(audio.duration);
 });
 
 audio.addEventListener('ended', nextTrack);
@@ -1242,73 +1066,6 @@ document.getElementById('file-in').addEventListener('change', e => {
   loadTrack(0);
 });
 
-/* ═══════════════════════════════════
-   NOW PLAYING (Last.fm / Scrubbler)
-═══════════════════════════════════ */
-const LASTFM_API_KEY     = 'bf4f954710cb7eaaa2038208abbd9cb5';
-const LASTFM_USER        = 'jesshorsch';
-const LASTFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
-
-let npTimer = null, lastNpKey = '';
-
-function npSetIdle() {
-  document.getElementById('np-title').textContent  = 'Nichts läuft';
-  document.getElementById('np-artist').textContent = '';
-  document.getElementById('np-art').innerHTML = '🎵';
-  document.getElementById('np-art').classList.remove('playing');
-  document.getElementById('np-bars')?.classList.remove('active');
-  document.getElementById('np-t-cur').textContent = '—';
-  document.getElementById('np-t-rem').textContent = '—';
-  document.getElementById('os-title').textContent  = 'Kein Titel';
-  document.getElementById('os-artist').textContent = 'Unbekannter Künstler';
-  document.getElementById('os-art').innerHTML = '🎵';
-  document.getElementById('os-art').classList.remove('playing');
-  lastNpKey = '';
-}
-
-function npCardClick() { openOverlay(); }
-
-async function pollNowPlaying() {
-  try {
-    const res = await fetch(
-      `https://ws.audioscrobbler.com/2.0/?method=user.getRecentTracks&user=${LASTFM_USER}&api_key=${LASTFM_API_KEY}&format=json&limit=1`
-    );
-    const d = await res.json();
-    const track = d?.recenttracks?.track?.[0];
-    if (!track) { npSetIdle(); return; }
-    const isNowPlaying = track['@attr']?.nowplaying === 'true';
-    const ageSec = track.date?.uts ? (Date.now() / 1000 - Number(track.date.uts)) : Infinity;
-    if (!isNowPlaying && ageSec > 240) { npSetIdle(); return; }
-
-    const title  = track.name;
-    const artist = track.artist['#text'];
-
-    document.getElementById('np-title').textContent  = title;
-    document.getElementById('np-artist').textContent = artist;
-    document.getElementById('np-art').classList.add('playing');
-    document.getElementById('np-bars')?.classList.toggle('active', isNowPlaying);
-    document.getElementById('os-title').textContent  = title;
-    document.getElementById('os-artist').textContent = artist;
-    document.getElementById('os-art').classList.add('playing');
-
-    const key = `${artist}|${title}`;
-    if (key !== lastNpKey) {
-      lastNpKey = key;
-      const imgUrl = track.image?.slice().reverse()
-        .find(i => i['#text'] && !i['#text'].includes(LASTFM_PLACEHOLDER))?.['#text'] || '';
-      const html = imgUrl ? `<img src="${imgUrl}" alt="">` : '🎵';
-      document.getElementById('np-art').innerHTML = html;
-      document.getElementById('os-art').innerHTML = html;
-      document.getElementById('np-art').classList.add('playing');
-      document.getElementById('os-art').classList.add('playing');
-    }
-  } catch (_) { /* silent */ }
-}
-
-function startNpPolling() {
-  pollNowPlaying();
-  npTimer = setInterval(pollNowPlaying, 15000);
-}
 
 /* ═══════════════════════════════════
    MUSIC OVERLAY
@@ -1342,8 +1099,6 @@ updateConn();
 initMap();
 setFollowing(true);
 startGPS();
-
-startNpPolling();
 
 // Add CSS for GPS ring animation
 const style = document.createElement('style');
